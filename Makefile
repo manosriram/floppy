@@ -1,5 +1,5 @@
 build:
-	go build -o afs cmd/main.go
+	go build -o floppy cmd/main.go
 
 run:
-	./afs
+	./floppy

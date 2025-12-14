@@ -1,4 +1,4 @@
-module github.com/manosriram/afs
+module github.com/manosriram/floppy
 
 go 1.25.5
 
