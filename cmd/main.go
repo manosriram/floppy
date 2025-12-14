@@ -4,14 +4,15 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/manosriram/floppy/handlers"
 )
 
 func main() {
 	app := fiber.New()
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World 👋!")
-	})
+	h := handlers.NewFiberHandler()
+
+	app.Post("/dir", h.ReadDirHandler)
 
 	log.Fatal(app.Listen(":3000"))
 }
