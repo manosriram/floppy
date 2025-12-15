@@ -5,32 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{.Title}}</title>
 
-    <!-- Terminal.css (classless global styles) -->
     <link rel="stylesheet" href="https://unpkg.com/terminal.css@0.7.4/dist/terminal.min.css" />
-
-    <!-- App-specific overrides -->
     <link rel="stylesheet" href="/styles.css" />
+
+    <style>
+      :root {
+        --page-font-size: 18px;
+      }
+
+      html {
+        font-size: var(--page-font-size);
+      }
+
+      body {
+        max-width: 56rem;
+        margin: 0 auto;
+        padding: 2.5rem 1.25rem;
+      }
+
+      main {
+        display: grid;
+        gap: 1rem;
+      }
+
+      h1 {
+        margin: 0 0 0.25rem 0;
+        font-size: 1.6rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      ul.mountpoints {
+        list-style: none;
+        padding: 0;
+        margin: 0.25rem 0 0 0;
+        display: grid;
+        gap: 0.5rem;
+      }
+
+      ul.mountpoints li code {
+        display: block;
+        padding: 0.6rem 0.75rem;
+        border-radius: 6px;
+      }
+
+      p.empty {
+        margin: 0.25rem 0 0 0;
+        opacity: 0.85;
+      }
+    </style>
   </head>
   <body>
     <main>
-      <h1>{{.Title}}</h1>
-      <p>Server is running.</p>
+      <h1>Mount points</h1>
 
-      <h2>API</h2>
-      <ul>
-        <li><code>POST /api/v1/fs/list</code></li>
-        <li><code>POST /api/v1/mountpoints/list</code></li>
-      </ul>
-
-      <h2>Mount points</h2>
       {{if .MountPoints}}
-      <ul class="terminal">
+      <ul class="mountpoints">
         {{range .MountPoints}}
         <li><code>{{.}}</code></li>
         {{end}}
       </ul>
       {{else}}
-      <p><em>No mount points configured.</em></p>
+      <p class="empty"><em>No mount points configured.</em></p>
       {{end}}
     </main>
   </body>
