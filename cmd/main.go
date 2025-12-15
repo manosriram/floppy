@@ -5,12 +5,18 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/template/html/v2"
 	"github.com/manosriram/floppy/handlers"
 	"github.com/manosriram/floppy/internal/config"
 )
 
 func main() {
-	app := fiber.New()
+	// Template engine: renders files in ./web with .html extension
+	engine := html.New("./web", ".html")
+
+	app := fiber.New(fiber.Config{
+		Views: engine,
+	})
 
 	m := config.NewMountPoints("/Users/manosriram/go/src/floppy/config")
 	err := m.ReadMountPointsFromConfig()
@@ -34,7 +40,7 @@ func main() {
 	// Serve static assets from web/ (e.g. /styles.css)
 	app.Static("/", "./web")
 
-	// Serve index.html at root
+	// Render template at root
 	app.Get("/", w.WebHandler.Home)
 
 	// TODO: Make the API naming convention better

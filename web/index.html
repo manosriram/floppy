@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Floppy</title>
+    <title>{{.Title}}</title>
 
     <!-- Terminal.css (classless global styles) -->
     <link rel="stylesheet" href="https://unpkg.com/terminal.css@0.7.4/dist/terminal.min.css" />
@@ -13,7 +13,7 @@
   </head>
   <body>
     <main>
-      <h1>Floppy</h1>
+      <h1>{{.Title}}</h1>
       <p>Server is running.</p>
 
       <h2>API</h2>
@@ -22,6 +22,16 @@
         <li><code>POST /api/v1/mountpoints/list</code></li>
       </ul>
 
+      <h2>Mount points</h2>
+      {{if .MountPoints}}
+      <ul>
+        {{range .MountPoints}}
+        <li><code>{{.}}</code></li>
+        {{end}}
+      </ul>
+      {{else}}
+      <p><em>No mount points configured.</em></p>
+      {{end}}
     </main>
   </body>
 </html>

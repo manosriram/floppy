@@ -1,8 +1,6 @@
 package web
 
 import (
-	"path/filepath"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/manosriram/floppy/internal/config"
 )
@@ -20,5 +18,8 @@ func NewFiberWebHandler(M config.Mountpoints) FiberWebHandler {
 func (f *FiberWebHandler) Home(c *fiber.Ctx) error {
 	mountPoints := f.M.ListMountPoints()
 
-	return c.SendFile(filepath.Join("web", "index.html"))
+	return c.Render("index", fiber.Map{
+		"Title":       "Floppy",
+		"MountPoints": mountPoints,
+	})
 }
