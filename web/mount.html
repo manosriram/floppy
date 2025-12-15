@@ -28,49 +28,264 @@
         gap: 1rem;
       }
 
+      header.page-header {
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .title-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
       h1 {
-        margin: 0 0 0.25rem 0;
+        margin: 0;
         font-size: 1.6rem;
         font-weight: 600;
         letter-spacing: 0.02em;
       }
 
-      ul.mountpoints {
-        list-style: none;
-        padding: 0;
-        margin: 0.25rem 0 0 0;
-        display: grid;
+      .view-toggle {
+        display: inline-flex;
         gap: 0.5rem;
+        align-items: center;
       }
 
-      ul.mountpoints li code {
-        display: block;
-        padding: 0.6rem 0.75rem;
+      .view-toggle button {
+        padding: 0.35rem 0.6rem;
         border-radius: 6px;
+        border: 1px solid var(--secondary-color, #666);
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+        font: inherit;
+        line-height: 1.1;
+      }
+
+      .view-toggle button[aria-pressed="true"] {
+        border-color: var(--primary-color, #00ff00);
+        box-shadow: 0 0 0 1px var(--primary-color, #00ff00) inset;
       }
 
       p.empty {
         margin: 0.25rem 0 0 0;
         opacity: 0.85;
       }
+
+      /* Views */
+      .view {
+        display: none;
+      }
+
+      .view.is-active {
+        display: block;
+      }
+
+      /* Table view */
+      .file-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .file-table th,
+      .file-table td {
+        padding: 0.55rem 0.6rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        vertical-align: middle;
+      }
+
+      .file-table th {
+        text-align: left;
+        font-weight: 600;
+        opacity: 0.9;
+      }
+
+      .file-table td.kind,
+      .file-table th.kind {
+        width: 6.5rem;
+        white-space: nowrap;
+      }
+
+      .file-table td.name a {
+        text-decoration: none;
+      }
+
+      .file-table td.name a:hover {
+        text-decoration: underline;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 0.1rem 0.45rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        opacity: 0.95;
+        font-size: 0.85rem;
+      }
+
+      /* Grid view */
+      .file-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+        gap: 0.75rem;
+      }
+
+      .file-card {
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 10px;
+        padding: 0.75rem;
+        display: grid;
+        gap: 0.6rem;
+        min-height: 7.5rem;
+      }
+
+      .thumb {
+        border: 1px dashed rgba(255, 255, 255, 0.22);
+        border-radius: 8px;
+        height: 4.25rem;
+        display: grid;
+        place-items: center;
+        opacity: 0.85;
+        font-size: 0.9rem;
+      }
+
+      .file-card a {
+        text-decoration: none;
+      }
+
+      .file-card a:hover {
+        text-decoration: underline;
+      }
+
+      .file-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+
+      .file-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 100%;
+      }
     </style>
   </head>
   <body>
     <main>
-      <h1>Mount points</h1>
+      <header class="page-header">
+        <div class="title-row">
+          <h1>Mount points</h1>
 
-			{{$root := .}}
+          <div class="view-toggle" role="group" aria-label="View toggle">
+            <button id="btnTable" type="button" aria-pressed="true" data-view="table">Table</button>
+            <button id="btnGrid" type="button" aria-pressed="false" data-view="grid">Grid</button>
+          </div>
+        </div>
+      </header>
+
+      {{$root := .}}
       {{if .Files}}
-      <ul class="mountpoints">
-        {{range $key, $value := .Files}}
-				{{ if $value.IsDir }}
-				<li><a href="{{$root.MountPath}}/{{.Name}}">{{ $value }}</a></li>
-				{{ else }}
-        <li>{{ $value }}</li>
-				{{ end}}
 
-        {{end}}
-      </ul>
+      <section id="viewTable" class="view is-active" aria-label="Table view">
+        <table class="file-table">
+          <thead>
+            <tr>
+              <th class="name">Name</th>
+              <th class="kind">Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{range $key, $value := .Files}}
+            <tr>
+              <td class="name">
+                {{if $value.IsDir}}
+                <a href="{{$root.MountPath}}/{{$value.Name}}">{{$value.Name}}</a>
+                {{else}}
+                {{$value.Name}}
+                {{end}}
+              </td>
+              <td class="kind">
+                {{if $value.IsDir}}
+                <span class="badge">DIR</span>
+                {{else}}
+                <span class="badge">FILE</span>
+                {{end}}
+              </td>
+            </tr>
+            {{end}}
+          </tbody>
+        </table>
+      </section>
+
+      <section id="viewGrid" class="view" aria-label="Grid view">
+        <div class="file-grid">
+          {{range $key, $value := .Files}}
+          <div class="file-card">
+            <div class="thumb">thumbnail</div>
+
+            <div class="file-meta">
+              <div class="file-name">
+                {{if $value.IsDir}}
+                <a href="{{$root.MountPath}}/{{$value.Name}}">{{$value.Name}}</a>
+                {{else}}
+                {{$value.Name}}
+                {{end}}
+              </div>
+
+              <div>
+                {{if $value.IsDir}}
+                <span class="badge">DIR</span>
+                {{else}}
+                <span class="badge">FILE</span>
+                {{end}}
+              </div>
+            </div>
+          </div>
+          {{end}}
+        </div>
+      </section>
+
+      <script>
+        (function () {
+          const btnTable = document.getElementById("btnTable");
+          const btnGrid = document.getElementById("btnGrid");
+          const viewTable = document.getElementById("viewTable");
+          const viewGrid = document.getElementById("viewGrid");
+
+          function setView(view) {
+            const isTable = view === "table";
+
+            viewTable.classList.toggle("is-active", isTable);
+            viewGrid.classList.toggle("is-active", !isTable);
+
+            btnTable.setAttribute("aria-pressed", String(isTable));
+            btnGrid.setAttribute("aria-pressed", String(!isTable));
+
+            try {
+              localStorage.setItem("floppy:view", view);
+            } catch (e) {}
+          }
+
+          btnTable.addEventListener("click", function () {
+            setView("table");
+          });
+
+          btnGrid.addEventListener("click", function () {
+            setView("grid");
+          });
+
+          try {
+            const saved = localStorage.getItem("floppy:view");
+            if (saved === "grid" || saved === "table") setView(saved);
+          } catch (e) {}
+        })();
+      </script>
+
       {{else}}
       <p class="empty"><em>Empty dir</em></p>
       {{end}}
