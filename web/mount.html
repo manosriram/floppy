@@ -214,12 +214,12 @@
             <tr>
               <td class="name">
                 {{if $value.IsDir}}
-                <a href="{{$root.MountPath}}/{{$value.Name}}">{{$value.Name}}</a>
+                <a class="dir-link" href="#" data-name="{{$value.Name}}">{{$value.Name}}</a>
                 {{else}}
                 {{$value.Name}}
                 {{end}}
               </td>
-							<td class="name">{{ .Size }} B</td>
+              <td class="name">{{$value.Size}} B</td>
               <td class="kind">
                 {{if $value.IsDir}}
                 <span class="badge">DIR</span>
@@ -242,7 +242,7 @@
             <div class="file-meta">
               <div class="file-name">
                 {{if $value.IsDir}}
-                <a href="{{$root.MountPath}}/{{$value.Name}}">{{$value.Name}}</a>
+                <a class="dir-link" href="#" data-name="{{$value.Name}}">{{$value.Name}}</a>
                 {{else}}
                 {{$value.Name}}
                 {{end}}
@@ -294,6 +294,26 @@
             const saved = localStorage.getItem("floppy:view");
             if (saved === "grid" || saved === "table") setView(saved);
           } catch (e) {}
+
+          function joinPath(basePath, name) {
+            // basePath is a pathname like "/mount/foo/bar" (no query/hash)
+            let base = basePath || "/";
+            if (!base.endsWith("/")) base += "/";
+            return base + encodeURIComponent(name);
+          }
+
+          document.addEventListener("click", function (e) {
+            const a = e.target.closest && e.target.closest("a.dir-link");
+            if (!a) return;
+
+            e.preventDefault();
+
+            const name = a.getAttribute("data-name");
+            if (!name) return;
+
+            const next = joinPath(window.location.pathname, name);
+            window.location.assign(next);
+          });
         })();
       </script>
 
