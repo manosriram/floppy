@@ -4,10 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Floppy</title>
+
+    <!-- Terminal.css (classless global styles) -->
+    <link rel="stylesheet" href="https://unpkg.com/terminal.css@0.7.4/dist/terminal.min.css" />
+
+    <!-- App-specific overrides -->
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div class="card">
+    <main>
       <h1>Floppy</h1>
       <p>Server is running.</p>
 
@@ -16,6 +21,6 @@
         <li><code>POST /api/v1/fs/list</code></li>
         <li><code>POST /api/v1/mountpoints/list</code></li>
       </ul>
-    </div>
+    </main>
   </body>
 </html>
