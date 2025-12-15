@@ -31,6 +31,9 @@ func main() {
 		return c.Next()
 	})
 
+	// Serve static assets from web/ (e.g. /styles.css)
+	app.Static("/", "./web")
+
 	// Serve index.html at root
 	app.Get("/", w.WebHandler.Home)
 
