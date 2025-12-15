@@ -1,0 +1,37 @@
+package api
+
+import (
+	"fmt"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/manosriram/floppy/internal/fs"
+)
+
+type ReadDirRequest struct {
+	Path        string   `json:"path"`
+	Root        string   `json:"root"`
+	MountPoints []string `json:"mountpoints"`
+}
+
+type FiberApiFileHandler struct{}
+
+func NewFiberHandler() *FiberApiFileHandler {
+	return &FiberApiFileHandler{}
+}
+
+func (h *FiberApiFileHandler) ReadDirHandler(c *fiber.Ctx) error {
+	var reqData ReadDirRequest
+	if err := c.BodyParser(&reqData); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	fmt.Println(c.Locals("mountpoints"))
+	reqData.MountPoints = c.Locals("mountpoints").([]string)
+
+	fs := fs.NewFS(reqData.Root)
+	files, _ := fs.ReadDir(reqData.Path, reqData.MountPoints)
+
+	return c.JSON(fiber.Map{
+		"files": files,
+	})
+}
