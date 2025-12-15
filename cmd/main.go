@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -28,6 +29,11 @@ func main() {
 	app.Use(func(c *fiber.Ctx) error {
 		c.Locals("mountpoints", m.MountPoints)
 		return c.Next()
+	})
+
+	// Serve index.html at root
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendFile(filepath.Join("web", "index.html"))
 	})
 
 	// TODO: Make the API naming convention better
