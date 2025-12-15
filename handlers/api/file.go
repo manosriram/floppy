@@ -1,8 +1,6 @@
 package api
 
 import (
-	"fmt"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/manosriram/floppy/internal/fs"
 )
@@ -25,7 +23,6 @@ func (h *FiberApiFileHandler) ReadDirHandler(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
-	fmt.Println(c.Locals("mountpoints"))
 	reqData.MountPoints = c.Locals("mountpoints").([]string)
 
 	fs := fs.NewFS(reqData.Root)

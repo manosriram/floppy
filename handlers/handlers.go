@@ -2,12 +2,17 @@ package handlers
 
 import (
 	"github.com/manosriram/floppy/handlers/api"
+	"github.com/manosriram/floppy/handlers/web"
 	"github.com/manosriram/floppy/internal/config"
 )
 
 type ApiHandler struct {
 	ApiFileHandler       api.FiberApiFileHandler
 	ApiMountpointHandler api.FiberApiMountpointHandler
+}
+
+type WebHandler struct {
+	WebHandler web.FiberWebHandler
 }
 
 func NewApiHandler(m config.Mountpoints) ApiHandler {
@@ -19,5 +24,13 @@ func NewApiHandler(m config.Mountpoints) ApiHandler {
 	return ApiHandler{
 		ApiFileHandler:       apiFileHandler,
 		ApiMountpointHandler: apiMountpointHandler,
+	}
+}
+
+func NewWebHandler(m config.Mountpoints) WebHandler {
+	webHandler := web.FiberWebHandler{}
+
+	return WebHandler{
+		WebHandler: webHandler,
 	}
 }
