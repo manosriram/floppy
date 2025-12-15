@@ -131,15 +131,24 @@
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
         gap: 0.75rem;
+
+        /* Added: outer border so the grid reads as a bordered block */
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 12px;
+        padding: 0.75rem;
       }
 
       .file-card {
-        border: 1px solid rgba(255, 255, 255, 0.14);
+        /* Tweaked: slightly stronger border so tiles look more separated */
+        border: 1px solid rgba(255, 255, 255, 0.18);
         border-radius: 10px;
         padding: 0.75rem;
         display: grid;
         gap: 0.6rem;
         min-height: 7.5rem;
+
+        /* Added: subtle background to make borders pop */
+        background: rgba(255, 255, 255, 0.03);
       }
 
       .thumb {
