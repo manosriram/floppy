@@ -8,20 +8,20 @@ import (
 )
 
 type FS struct {
-	Root string
+	// Root string
 	// MountPoints []string
 	ShowHidden bool
 }
 
-func NewFS(root string) FS {
+func NewFS() FS {
 	return FS{
-		Root:       root,
+		// Root:       root,
 		ShowHidden: false,
 	}
 }
 
-func (f FS) ReadDir(path string, mountpoints []string) ([]FileMetadata, error) {
-	path = utils.CleanFilePath(f.Root) + utils.CleanFilePath(path) // TODO: only proceed after this if f.Root exists in mountpoints
+func (f FS) ReadDir(path string) ([]FileMetadata, error) {
+	path = utils.CleanFilePath(path) // TODO: only proceed after this if f.Root exists in mountpoints
 	var filesMetadata []FileMetadata
 	entries, err := os.ReadDir(path)
 	if err != nil {

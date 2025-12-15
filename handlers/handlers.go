@@ -27,8 +27,10 @@ func NewApiHandler(m config.Mountpoints) ApiHandler {
 	}
 }
 
-func NewWebHandler(m config.Mountpoints) WebHandler {
-	webHandler := web.FiberWebHandler{}
+func NewWebHandler(M config.Mountpoints) WebHandler {
+	webHandler := web.FiberWebHandler{
+		M: M,
+	}
 
 	return WebHandler{
 		WebHandler: webHandler,

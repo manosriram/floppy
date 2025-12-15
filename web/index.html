@@ -61,8 +61,8 @@
 
       {{if .MountPoints}}
       <ul class="mountpoints">
-        {{range .MountPoints}}
-        <li><code>{{.}}</code></li>
+        {{range $key, $value := .MountPoints}}
+        <li>{{ $key }}</li>
         {{end}}
       </ul>
       {{else}}

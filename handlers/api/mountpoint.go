@@ -25,7 +25,14 @@ func (h *FiberApiMountpointHandler) ListMountPointsHandler(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
+	mountPoints := h.M.ListMountPoints()
+	var mountPointNamedPaths []string
+
+	for k, _ := range mountPoints {
+		mountPointNamedPaths = append(mountPointNamedPaths, k)
+	}
+
 	return c.JSON(fiber.Map{
-		"mountPoints": h.M.ListMountPoints(),
+		"mountPoints": mountPointNamedPaths,
 	})
 }
