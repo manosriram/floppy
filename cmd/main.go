@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -21,6 +20,7 @@ func main() {
 	}
 
 	h := handlers.NewApiHandler(m)
+	w := handlers.NewWebHandler(m)
 
 	// Middlewares
 	app.Use(logger.New())
@@ -32,9 +32,7 @@ func main() {
 	})
 
 	// Serve index.html at root
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendFile(filepath.Join("web", "index.html"))
-	})
+	app.Get("/", w.WebHandler.Home)
 
 	// TODO: Make the API naming convention better
 	app.Post("/api/v1/fs/list", h.ApiFileHandler.ReadDirHandler)
