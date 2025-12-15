@@ -37,8 +37,9 @@ func main() {
 		return c.Next()
 	})
 
-	// Serve static assets from web/ (e.g. /styles.css)
-	app.Static("/", "./web")
+	// Serve static assets from web/ under /static (e.g. /static/styles.css)
+	// This avoids overriding the "/" route with the raw index.html file.
+	app.Static("/static", "./web")
 
 	// Render template at root
 	app.Get("/", w.WebHandler.Home)
