@@ -22,9 +22,35 @@
         <li><code>POST /api/v1/mountpoints/list</code></li>
       </ul>
 
-			<form class="terminal">
-				<input type="" name="" value="">
-			</form>
+      <h2>Quick action</h2>
+      <form class="terminal" method="post" action="#" autocomplete="off">
+        <fieldset>
+          <legend>Run command</legend>
+
+          <p class="hint">
+            This is a UI-only form for now (no backend wired). It’s styled by Terminal.css.
+          </p>
+
+          <label for="path">Path</label>
+          <input id="path" name="path" type="text" placeholder="/Users/you" />
+
+          <label for="action">Action</label>
+          <select id="action" name="action">
+            <option value="list" selected>List directory</option>
+            <option value="mountpoints">List mount points</option>
+          </select>
+
+          <label class="checkbox">
+            <input id="hidden" name="hidden" type="checkbox" />
+            <span>Show hidden files</span>
+          </label>
+
+          <div class="form-actions">
+            <button type="submit">Run</button>
+            <button type="reset">Reset</button>
+          </div>
+        </fieldset>
+      </form>
     </main>
   </body>
 </html>
