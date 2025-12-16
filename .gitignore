@@ -3,3 +3,5 @@ TODO.md
 floppy
 .env
 go.sum
+.thumbs
+.DS_STORE

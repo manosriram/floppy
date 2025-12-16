@@ -9,6 +9,7 @@ import (
 type ApiHandler struct {
 	ApiFileHandler       api.FiberApiFileHandler
 	ApiMountpointHandler api.FiberApiMountpointHandler
+	ApiThumbnailHandler  api.FiberApiThumbnailHandler
 }
 
 type WebHandler struct {
@@ -16,14 +17,20 @@ type WebHandler struct {
 }
 
 func NewApiHandler(m config.Mountpoints) ApiHandler {
-	apiFileHandler := api.FiberApiFileHandler{}
+	apiFileHandler := api.FiberApiFileHandler{
+		M: m,
+	}
 	apiMountpointHandler := api.FiberApiMountpointHandler{
+		M: m,
+	}
+	apiThumbnailHandler := api.FiberApiThumbnailHandler{
 		M: m,
 	}
 
 	return ApiHandler{
 		ApiFileHandler:       apiFileHandler,
 		ApiMountpointHandler: apiMountpointHandler,
+		ApiThumbnailHandler:  apiThumbnailHandler,
 	}
 }
 

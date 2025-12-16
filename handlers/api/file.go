@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/manosriram/floppy/internal/config"
 	"github.com/manosriram/floppy/internal/fs"
 )
 
@@ -11,10 +12,14 @@ type ReadDirRequest struct {
 	MountPoints []string `json:"mountpoints"`
 }
 
-type FiberApiFileHandler struct{}
+type FiberApiFileHandler struct {
+	M config.Mountpoints
+}
 
-func NewFiberHandler() *FiberApiFileHandler {
-	return &FiberApiFileHandler{}
+func NewFiberApiFileHandler(M config.Mountpoints) *FiberApiFileHandler {
+	return &FiberApiFileHandler{
+		M: M,
+	}
 }
 
 func (h *FiberApiFileHandler) ReadDirHandler(c *fiber.Ctx) error {

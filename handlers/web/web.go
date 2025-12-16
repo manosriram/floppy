@@ -41,6 +41,9 @@ func (f *FiberWebHandler) ReadMountDir(c *fiber.Ctx) error {
 	}
 
 	mountPathSplit := strings.Split(mountPath, "/")
+	rootName := mountPathSplit[0]
+	relDir := strings.Join(mountPathSplit[1:], "/")
+
 	if len(mountPathSplit) < 1 {
 		return c.Render("mount", fiber.Map{
 			"Files":        nil,
@@ -49,10 +52,16 @@ func (f *FiberWebHandler) ReadMountDir(c *fiber.Ctx) error {
 			"RequestPath":  c.Path(),
 			"RequestParam": c.Params("*"),
 			"Error":        errors.New("Error reading Dir"),
+			"RootName":     rootName,
+			"RelDir":       relDir,
 		})
 	}
 
 	mountPath = f.M.MountPoints[mountPathSplit[0]] + "/" + strings.Join(mountPathSplit[1:], "/")
+
+	ext := strings.Split(mountPath, ".")
+	fileExt := ext[len(ext)-1]
+	fmt.Println("ext = ", fileExt)
 
 	d, err := os.ReadFile(mountPath)
 	if err == nil {
@@ -69,6 +78,8 @@ func (f *FiberWebHandler) ReadMountDir(c *fiber.Ctx) error {
 			"RequestPath":  c.Path(),
 			"RequestParam": c.Params("*"),
 			"Error":        errors.New("Error reading Dir"),
+			"RootName":     rootName,
+			"RelDir":       relDir,
 		})
 	}
 
@@ -78,5 +89,7 @@ func (f *FiberWebHandler) ReadMountDir(c *fiber.Ctx) error {
 		"MountPath":    mountPathSplit[0],
 		"RequestPath":  c.Path(),
 		"RequestParam": c.Params("*"),
+		"RootName":     rootName,
+		"RelDir":       relDir,
 	})
 }
