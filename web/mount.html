@@ -148,6 +148,18 @@
         text-decoration: underline;
       }
 
+      /* Differentiate directory names in the table */
+      .file-table td.name a.dir-link.is-dir {
+        text-decoration: underline;
+        text-underline-offset: 0.12em;
+        font-weight: 600;
+      }
+
+      .file-table td.name a.dir-link.is-file {
+        text-decoration: none;
+        font-weight: 400;
+      }
+
       .badge {
         display: inline-block;
         padding: 0.1rem 0.45rem;
@@ -261,7 +273,11 @@
             {{range $key, $value := .Files}}
             <tr>
               <td class="name">
-                <a class="dir-link" href="#" data-name="{{$value.Name}}">{{$value.Name}}</a>
+                {{if $value.IsDir}}
+                <a class="dir-link is-dir" href="#" data-name="{{$value.Name}}">{{$value.Name}}</a>
+                {{else}}
+                <a class="dir-link is-file" href="#" data-name="{{$value.Name}}">{{$value.Name}}</a>
+                {{end}}
               </td>
               <td class="name">{{$value.Size}} B</td>
               <td class="kind">
