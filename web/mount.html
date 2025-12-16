@@ -74,6 +74,28 @@
         opacity: 0.85;
       }
 
+      /* Breadcrumb */
+      nav.breadcrumb {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        align-items: center;
+        font-size: 0.95rem;
+        opacity: 0.95;
+      }
+
+      nav.breadcrumb a {
+        text-decoration: none;
+      }
+
+      nav.breadcrumb a:hover {
+        text-decoration: underline;
+      }
+
+      .crumb-sep {
+        opacity: 0.7;
+      }
+
       /* Views */
       .view {
         display: none;
@@ -201,6 +223,26 @@
             <button id="btnGrid" type="button" aria-pressed="false" data-view="grid">Grid</button>
           </div>
         </div>
+
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          {{$p := .RequestPath}}
+          {{if eq $p ""}}
+            {{$p = "/"}}
+          {{end}}
+
+          <a href="/">Home</a>
+
+          {{if ne $p "/"}}
+            {{$acc := ""}}
+            {{range $i, $seg := (split (trim $p "/") "/")}}
+              {{if ne $seg ""}}
+                {{$acc = printf "%s/%s" $acc $seg}}
+                <span class="crumb-sep">/</span>
+                <a href="{{$acc}}">{{$seg}}</a>
+              {{end}}
+            {{end}}
+          {{end}}
+        </nav>
       </header>
 
       {{$root := .}}

@@ -37,7 +37,9 @@ func (f *FiberWebHandler) ReadMountDir(c *fiber.Ctx) error {
 	files, _ := fs.NewFS().ReadDir(mountPath)
 
 	return c.Render("mount", fiber.Map{
-		"Files":     files,
-		"MountPath": mountPathSplit[0],
+		"Files":        files,
+		"MountPath":    mountPathSplit[0],
+		"RequestPath":  c.Path(),
+		"RequestParam": c.Params("*"),
 	})
 }
