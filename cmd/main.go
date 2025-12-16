@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -13,6 +14,10 @@ import (
 func main() {
 	// Template engine: renders files in ./web with .html extension
 	engine := html.New("./web", ".html")
+
+	// Add template helper functions used by templates (e.g. mount.html breadcrumb)
+	engine.AddFunc("split", strings.Split)
+	engine.AddFunc("trim", strings.Trim)
 
 	app := fiber.New(fiber.Config{
 		Views: engine,
