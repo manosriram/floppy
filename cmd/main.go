@@ -1,10 +1,9 @@
 package main
 
 import (
-	"io/fs"
+	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -14,66 +13,26 @@ import (
 	"github.com/gofiber/template/html/v2"
 	"github.com/manosriram/floppy/handlers"
 	"github.com/manosriram/floppy/internal/config"
-	fss "github.com/manosriram/floppy/internal/fs"
+	"github.com/manosriram/floppy/internal/fs"
 )
 
-const (
-	THUMB_DIR = "/Users/manosriram/go/src/floppy/.thumbs/"
-)
-
-func pathExists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
+func generateThumbnails(m config.Mountpoints) {
+	fmt.Println("Started thumbnail generation job")
+	for _, mp := range m.MountPoints {
+		go fs.GenerateThumbnails(mp)
 	}
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-	return false, err // permission error, etc.
-}
-
-func walkdir(root string) {
-	// root := "/some/path"
-
-	thumbsDir := "/Users/manosriram/go/src/floppy/.thumbs"
-	ok, _ := pathExists(thumbsDir)
-	if !ok {
-		if err := os.Mkdir(thumbsDir, 0o755); err != nil {
-			log.Fatalf("Error creating .thumbs dir")
-		}
-	}
-
-	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			// e.g. permission error; decide whether to stop or skip
-			return err
-		}
-
-		if d.IsDir() || path[0] == '.' {
-			// fmt.Println("DIR :", path)
-			return nil
-		}
-
-		ext := strings.Split(path, ".")
-		extn := ext[len(ext)-1]
-		if extn == "jpg" || extn == "jpeg" || extn == "svg" || extn == "png" {
-			thb := fss.NewThumbnail(path, thumbsDir, extn, d.Name())
-			// fmt.Println(thb.GenerateThumbnail())
-			thb.GenerateThumbnail()
-		}
-		// fmt.Println(extn)
-		// fmt.Println("FILE:", path)
-		return nil
-	})
-
-	if err != nil {
-		panic(err)
-	}
+	fmt.Println("Completed thumbnail generation job")
 }
 
 func main() {
+	// TODO: Add uber zap logger
 
-	// Template engine: renders files in ./web with .html extension
+	workingDir, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Error getting current working dir\n")
+	}
+	thumbsDir := workingDir + "/.thumbs"
+
 	engine := html.New("./web", ".html")
 
 	// Add template helper functions used by templates (e.g. mount.html breadcrumb)
@@ -85,14 +44,15 @@ func main() {
 	})
 
 	m := config.NewMountPoints("/Users/manosriram/go/src/floppy/config")
-	err := m.ReadMountPointsFromConfig()
+	err = m.ReadMountPointsFromConfig()
 	if err != nil {
-		// panic
 		log.Fatalf("Error reading config file\n")
 	}
 
 	h := handlers.NewApiHandler(m)
 	w := handlers.NewWebHandler(m)
+
+	go generateThumbnails(m)
 
 	// Middlewares
 	app.Use(logger.New())
@@ -108,13 +68,9 @@ func main() {
 	// Middlware to set request context vars
 	app.Use(func(c *fiber.Ctx) error {
 		c.Locals("mountpoints", m.MountPoints)
-		c.Locals("thumbsDir", THUMB_DIR)
+		c.Locals("thumbsDir", thumbsDir)
 		return c.Next()
 	})
-
-	for _, mp := range m.MountPoints {
-		walkdir(mp)
-	}
 
 	// Serve static assets from web/ (e.g. /styles.css)
 	app.Static("/", "./static")
