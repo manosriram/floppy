@@ -1,7 +1,8 @@
 package web
 
 import (
-	"fmt"
+	"net/url"
+	"os"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -29,15 +30,30 @@ func (f *FiberWebHandler) Home(c *fiber.Ctx) error {
 }
 
 func (f *FiberWebHandler) ReadMountDir(c *fiber.Ctx) error {
-	mountPath := c.Params("*")
+	mountPath, err := url.PathUnescape(c.Params("*"))
+	if err != nil {
+		return c.Render("mount", fiber.Map{
+			"Error": err.Error(),
+		})
+	}
 
 	mountPathSplit := strings.Split(mountPath, "/")
 	mountPath = f.M.MountPoints[mountPathSplit[0]] + "/" + strings.Join(mountPathSplit[1:], "/")
-	fmt.Println(mountPath)
-	files, _ := fs.NewFS().ReadDir(mountPath)
+	files, err := fs.NewFS().ReadDir(mountPath)
+	if err != nil {
+		return c.Render("mount", fiber.Map{
+			"Error": err.Error(),
+		})
+	}
+
+	d, err := os.ReadFile(mountPath)
+	if err == nil {
+		return c.SendFile(mountPath)
+	}
 
 	return c.Render("mount", fiber.Map{
 		"Files":        files,
+		"FileData":     d,
 		"MountPath":    mountPathSplit[0],
 		"RequestPath":  c.Path(),
 		"RequestParam": c.Params("*"),
