@@ -315,7 +315,26 @@
         <div class="file-grid">
           {{range $key, $value := .Files}}
           <div class="file-card">
-            <div class="thumb">thumbnail</div>
+
+						<div class="thumb">
+							{{if not $value.IsDir}}
+							{{$file := $value.Name}}
+							{{if ne $.RelDir ""}}
+							{{$file = printf "%s/%s" $.RelDir $value.Name}}
+							{{end}}
+
+							<img
+									loading="lazy"
+									alt="{{$value.Name}}"
+									src="/api/thumb?root={{$.RootName}}&file={{$file}}"
+									style="max-width: 100%; max-height: 100%; object-fit: cover;"
+									onerror="this.style.display='none'; this.parentElement.textContent='no thumb';"
+									/>
+							{{else}}
+							<span>dir</span>
+							{{end}}
+						</div>
+            <!-- <div class="thumb">thumbnail</div> -->
 
             <div class="file-meta">
               <div class="file-name">
