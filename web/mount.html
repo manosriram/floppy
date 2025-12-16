@@ -11,6 +11,7 @@
     <style>
       :root {
         --page-font-size: 18px;
+        --thumb-size: 140px; /* make thumbnails neat and consistent */
       }
 
       html {
@@ -192,11 +193,29 @@
       }
 
       .thumb {
-        border: 1px dashed rgba(255, 255, 255, 0.22);
-        border-radius: 8px;
-        height: 4.25rem;
+        width: var(--thumb-size);
+        height: var(--thumb-size);
+        margin: 0 auto;
+
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 10px;
+
+        background: rgba(255, 255, 255, 0.04);
+        overflow: hidden;
+
         display: grid;
         place-items: center;
+      }
+
+      .thumb img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+        object-position: center;
+      }
+
+      .thumb .thumb-fallback {
         opacity: 0.85;
         font-size: 0.9rem;
       }
@@ -223,16 +242,16 @@
         max-width: 100%;
       }
 
-			.error-box {
-				border: 1px solid rgba(255, 80, 80, 0.55);
-				background: rgba(255, 80, 80, 0.12);
-				color: inherit;
-				padding: 0.75rem 0.9rem;
-				border-radius: 10px;
-			}
-			.error-box strong {
-				font-weight: 700;
-			}
+      .error-box {
+        border: 1px solid rgba(255, 80, 80, 0.55);
+        background: rgba(255, 80, 80, 0.12);
+        color: inherit;
+        padding: 0.75rem 0.9rem;
+        border-radius: 10px;
+      }
+      .error-box strong {
+        font-weight: 700;
+      }
     </style>
   </head>
   <body>
@@ -270,11 +289,11 @@
 
       {{$root := .}}
 
-			{{ if .Error }}
-			<section class="error-box" role="alert" aria-live="polite">
-				<strong>Error:</strong> {{ .Error }}
-			</section>
-			 {{ else }}
+      {{ if .Error }}
+      <section class="error-box" role="alert" aria-live="polite">
+        <strong>Error:</strong> {{ .Error }}
+      </section>
+      {{ else }}
 
       {{if .Files}}
 
@@ -315,26 +334,23 @@
         <div class="file-grid">
           {{range $key, $value := .Files}}
           <div class="file-card">
+            <div class="thumb">
+              {{if not $value.IsDir}}
+              {{$file := $value.Name}}
+              {{if ne $.RelDir ""}}
+              {{$file = printf "%s/%s" $.RelDir $value.Name}}
+              {{end}}
 
-						<div class="thumb">
-							{{if not $value.IsDir}}
-							{{$file := $value.Name}}
-							{{if ne $.RelDir ""}}
-							{{$file = printf "%s/%s" $.RelDir $value.Name}}
-							{{end}}
-
-							<img
-									loading="lazy"
-									alt="{{$value.Name}}"
-									src="/api/thumb?root={{$.RootName}}&file={{$file}}"
-									style="max-width: 100%; max-height: 100%; object-fit: cover;"
-									onerror="this.style.display='none'; this.parentElement.textContent='no thumb';"
-									/>
-							{{else}}
-							<span>dir</span>
-							{{end}}
-						</div>
-            <!-- <div class="thumb">thumbnail</div> -->
+              <img
+                loading="lazy"
+                alt="{{$value.Name}}"
+                src="/api/thumb?root={{$.RootName}}&file={{$file}}"
+                onerror="this.remove(); this.parentElement.innerHTML='<span class=&quot;thumb-fallback&quot;>no thumb</span>';"
+              />
+              {{else}}
+              <span class="thumb-fallback">dir</span>
+              {{end}}
+            </div>
 
             <div class="file-meta">
               <div class="file-name">
@@ -394,6 +410,44 @@
             return base + encodeURIComponent(name);
           }
 
+          function maskFileNameKeepExt(name, maxBaseLen) {
+            if (!name) return name;
+            const lastDot = name.lastIndexOf(".");
+            const hasExt = lastDot > 0 && lastDot < name.length - 1;
+
+            // For dotfiles like ".env" treat as no extension
+            if (name.startsWith(".") && lastDot === 0) return name;
+
+            if (!hasExt) {
+              if (name.length <= maxBaseLen) return name;
+              return name.slice(0, Math.max(1, maxBaseLen)) + "...";
+            }
+
+            const base = name.slice(0, lastDot);
+            const ext = name.slice(lastDot); // includes "."
+            if (base.length <= maxBaseLen) return base + ext;
+
+            return base.slice(0, Math.max(1, maxBaseLen)) + "..." + ext;
+          }
+
+          function applyMaskedNames() {
+            // Mask both table + grid names, but keep the real name in data-name for navigation
+            const links = document.querySelectorAll("a.dir-link[data-name]");
+            links.forEach((a) => {
+              const full = a.getAttribute("data-name");
+              if (!full) return;
+
+              // Don't mask directories (usually shorter and useful to see)
+              const isDir = a.classList.contains("is-dir");
+              if (isDir) return;
+
+              a.textContent = maskFileNameKeepExt(full, 14);
+              a.title = full; // show full name on hover
+            });
+          }
+
+          applyMaskedNames();
+
           document.addEventListener("click", function (e) {
             const a = e.target.closest && e.target.closest("a.dir-link");
             if (!a) return;
@@ -410,9 +464,9 @@
       </script>
 
       {{else}}
-			<p class="empty"><em>Empty Dir</em></p>
+      <p class="empty"><em>Empty Dir</em></p>
       {{end}}
-			{{ end }}
+      {{ end }}
     </main>
   </body>
 </html>
