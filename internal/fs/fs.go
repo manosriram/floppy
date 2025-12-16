@@ -40,6 +40,7 @@ func (f FS) ReadDir(path string) ([]FileMetadata, error) {
 			Path:  fmt.Sprintf("%s/%s", path, entry.Name()),
 			Name:  entry.Name(),
 			Size:  info.Size(),
+			// Type:  entry.Info(),
 		})
 	}
 

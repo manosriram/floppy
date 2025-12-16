@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"net/url"
 	"os"
 	"strings"
@@ -39,16 +40,24 @@ func (f *FiberWebHandler) ReadMountDir(c *fiber.Ctx) error {
 
 	mountPathSplit := strings.Split(mountPath, "/")
 	mountPath = f.M.MountPoints[mountPathSplit[0]] + "/" + strings.Join(mountPathSplit[1:], "/")
-	files, err := fs.NewFS().ReadDir(mountPath)
-	if err != nil {
-		return c.Render("mount", fiber.Map{
-			"Error": err.Error(),
-		})
-	}
 
 	d, err := os.ReadFile(mountPath)
 	if err == nil {
 		return c.SendFile(mountPath)
+	}
+
+	files, err := fs.NewFS().ReadDir(mountPath)
+	fmt.Println(err)
+
+	if err != nil {
+		return c.Render("mount", fiber.Map{
+			"Files":        files,
+			"FileData":     nil,
+			"MountPath":    mountPathSplit[0],
+			"RequestPath":  c.Path(),
+			"RequestParam": c.Params("*"),
+			"Error":        err.Error(),
+		})
 	}
 
 	return c.Render("mount", fiber.Map{

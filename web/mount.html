@@ -261,11 +261,7 @@
             {{range $key, $value := .Files}}
             <tr>
               <td class="name">
-                {{if $value.IsDir}}
                 <a class="dir-link" href="#" data-name="{{$value.Name}}">{{$value.Name}}</a>
-                {{else}}
-                {{$value.Name}}
-                {{end}}
               </td>
               <td class="name">{{$value.Size}} B</td>
               <td class="kind">
@@ -289,11 +285,7 @@
 
             <div class="file-meta">
               <div class="file-name">
-                {{if $value.IsDir}}
                 <a class="dir-link" href="#" data-name="{{$value.Name}}">{{$value.Name}}</a>
-                {{else}}
-                {{$value.Name}}
-                {{end}}
               </div>
 
               <div>
@@ -365,7 +357,7 @@
       </script>
 
       {{else}}
-      <p class="empty"><em>Empty dir</em></p>
+			<p class="empty"><em>Empty Dir</em></p>
       {{end}}
     </main>
   </body>
