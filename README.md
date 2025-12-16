@@ -1,4 +1,4 @@
-<img width="200" height="200" alt="floppy" src="https://github.com/user-attachments/assets/76f8c0e2-d068-4472-bfd2-3f9df2b36867" />
+<img width="200" height="250" alt="floppy" src="https://github.com/user-attachments/assets/98d9581f-9716-4269-97d0-ce09ad7bdf73" />
 
 ### What?
 Floppy is a blazingly fast file server. The main goal of this file server is to be fast on slow networks
@@ -10,3 +10,5 @@ I use [copyparty](https://github.com/9001/copyparty) extensively everyday, but i
   c. Has a single binary which is of few MBs
 
 README to be updated.
+
+
