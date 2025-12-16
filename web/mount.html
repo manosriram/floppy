@@ -222,6 +222,17 @@
         white-space: nowrap;
         max-width: 100%;
       }
+
+			.error-box {
+				border: 1px solid rgba(255, 80, 80, 0.55);
+				background: rgba(255, 80, 80, 0.12);
+				color: inherit;
+				padding: 0.75rem 0.9rem;
+				border-radius: 10px;
+			}
+			.error-box strong {
+				font-weight: 700;
+			}
     </style>
   </head>
   <body>
@@ -258,6 +269,13 @@
       </header>
 
       {{$root := .}}
+
+			{{ if .Error }}
+			<section class="error-box" role="alert" aria-live="polite">
+				<strong>Error:</strong> {{ .Error }}
+			</section>
+			 {{ else }}
+
       {{if .Files}}
 
       <section id="viewTable" class="view is-active" aria-label="Table view">
@@ -375,6 +393,7 @@
       {{else}}
 			<p class="empty"><em>Empty Dir</em></p>
       {{end}}
+			{{ end }}
     </main>
   </body>
 </html>

@@ -26,7 +26,9 @@ func (h *FiberApiFileHandler) ReadDirHandler(c *fiber.Ctx) error {
 	reqData.MountPoints = c.Locals("mountpoints").([]string)
 
 	fs := fs.NewFS()
-	files, _ := fs.ReadDir(reqData.Path)
+	files, err := fs.ReadDir(reqData.Path)
+	if err != nil {
+	}
 
 	return c.JSON(fiber.Map{
 		"files": files,

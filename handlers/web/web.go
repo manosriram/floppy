@@ -1,6 +1,7 @@
 package web
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -33,12 +34,24 @@ func (f *FiberWebHandler) Home(c *fiber.Ctx) error {
 func (f *FiberWebHandler) ReadMountDir(c *fiber.Ctx) error {
 	mountPath, err := url.PathUnescape(c.Params("*"))
 	if err != nil {
+		fmt.Println("Error reading dir: ", err.Error())
 		return c.Render("mount", fiber.Map{
 			"Error": err.Error(),
 		})
 	}
 
 	mountPathSplit := strings.Split(mountPath, "/")
+	if len(mountPathSplit) < 1 {
+		return c.Render("mount", fiber.Map{
+			"Files":        nil,
+			"FileData":     nil,
+			"MountPath":    mountPathSplit[0],
+			"RequestPath":  c.Path(),
+			"RequestParam": c.Params("*"),
+			"Error":        errors.New("Error reading Dir"),
+		})
+	}
+
 	mountPath = f.M.MountPoints[mountPathSplit[0]] + "/" + strings.Join(mountPathSplit[1:], "/")
 
 	d, err := os.ReadFile(mountPath)
@@ -47,16 +60,15 @@ func (f *FiberWebHandler) ReadMountDir(c *fiber.Ctx) error {
 	}
 
 	files, err := fs.NewFS().ReadDir(mountPath)
-	fmt.Println(err)
-
 	if err != nil {
+		fmt.Println("Error reading dir: ", err.Error())
 		return c.Render("mount", fiber.Map{
 			"Files":        files,
 			"FileData":     nil,
 			"MountPath":    mountPathSplit[0],
 			"RequestPath":  c.Path(),
 			"RequestParam": c.Params("*"),
-			"Error":        err.Error(),
+			"Error":        errors.New("Error reading Dir"),
 		})
 	}
 
