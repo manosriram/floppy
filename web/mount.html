@@ -190,6 +190,18 @@
         min-height: 7.5rem;
 
         background: rgba(255, 255, 255, 0.03);
+
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .file-card:hover {
+        border-color: rgba(255, 255, 255, 0.32);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .file-card:active {
+        transform: translateY(1px);
       }
 
       .thumb {
@@ -331,7 +343,7 @@
       <section id="viewGrid" class="view" aria-label="Grid view">
         <div class="file-grid">
           {{range $key, $value := .Files}}
-          <div class="file-card">
+          <div class="file-card" data-name="{{$value.Name}}" role="link" tabindex="0" aria-label="Open {{$value.Name}}">
             <div class="thumb">
               {{if not $value.IsDir}}
               {{$file := $value.Name}}
@@ -444,17 +456,43 @@
 
           applyMaskedNames();
 
-          document.addEventListener("click", function (e) {
-            const a = e.target.closest && e.target.closest("a.dir-link");
-            if (!a) return;
-
-            e.preventDefault();
-
-            const name = a.getAttribute("data-name");
+          function navigateToName(name) {
             if (!name) return;
-
             const next = joinPath(window.location.pathname, name);
             window.location.assign(next);
+          }
+
+          document.addEventListener("click", function (e) {
+            // If user clicked a link, let the link handler handle it (and prevent double navigation)
+            const link = e.target.closest && e.target.closest("a.dir-link");
+            if (link) {
+              e.preventDefault();
+              const name = link.getAttribute("data-name");
+              navigateToName(name);
+              return;
+            }
+
+            // Otherwise, if user clicked anywhere inside a file-card, navigate
+            const card = e.target.closest && e.target.closest(".file-card[data-name]");
+            if (!card) return;
+
+            // Ignore clicks on elements that should not trigger navigation (if any in future)
+            const name = card.getAttribute("data-name");
+            navigateToName(name);
+          });
+
+          document.addEventListener("keydown", function (e) {
+            // Keyboard accessibility: Enter/Space on focused card
+            const card = document.activeElement && document.activeElement.closest
+              ? document.activeElement.closest(".file-card[data-name]")
+              : null;
+            if (!card) return;
+
+            if (e.key !== "Enter" && e.key !== " ") return;
+            e.preventDefault();
+
+            const name = card.getAttribute("data-name");
+            navigateToName(name);
           });
         })();
       </script>
