@@ -20,3 +20,116 @@ form.terminal .form-actions {
   margin-top: 1rem;
   flex-wrap: wrap;
 }
+
+/* Media modal (popup viewer) */
+.media-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+}
+
+.media-modal.is-open {
+  display: block;
+}
+
+.media-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.media-modal__dialog {
+  position: relative;
+  z-index: 1;
+
+  width: min(1100px, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  margin: 1rem auto;
+
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(6px);
+
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+}
+
+.media-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+	color: white;
+}
+
+.media-modal__title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.media-modal__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.media-modal__actions a,
+.media-modal__actions button {
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1.1;
+  text-decoration: none;
+}
+
+.media-modal__actions a:hover,
+.media-modal__actions button:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.media-modal__body {
+  padding: 0.9rem;
+  overflow: auto;
+  display: grid;
+  place-items: center;
+}
+
+.media-modal__body img,
+.media-modal__body video {
+  max-width: 100%;
+  max-height: calc(100vh - 8rem);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.media-modal__body audio {
+  width: min(720px, 100%);
+}
+
+.media-modal__body iframe {
+  width: 100%;
+  height: calc(100vh - 8rem);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.media-modal__hint {
+  opacity: 0.9;
+  line-height: 1.4;
+	color: white;
+}

@@ -59,10 +59,6 @@ func (f *FiberWebHandler) ReadMountDir(c *fiber.Ctx) error {
 
 	mountPath = f.M.MountPoints[mountPathSplit[0]] + "/" + strings.Join(mountPathSplit[1:], "/")
 
-	ext := strings.Split(mountPath, ".")
-	fileExt := ext[len(ext)-1]
-	fmt.Println("ext = ", fileExt)
-
 	d, err := os.ReadFile(mountPath)
 	if err == nil {
 		return c.SendFile(mountPath)

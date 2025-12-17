@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="icon" type="image/png" href="/floppy.png" />
     <title>{{.Title}}</title>
 
     <link rel="stylesheet" href="https://unpkg.com/terminal.css@0.7.4/dist/terminal.min.css" />
@@ -323,9 +324,9 @@
             <tr>
               <td class="name">
                 {{if $value.IsDir}}
-                <a class="dir-link is-dir" href="#" data-name="{{$value.Name}}">{{$value.Name}}</a>
+                <a class="dir-link is-dir" href="#" data-name="{{$value.Name}}" data-isdir="true">{{$value.Name}}</a>
                 {{else}}
-                <a class="dir-link is-file" href="#" data-name="{{$value.Name}}">{{$value.Name}}</a>
+                <a class="dir-link is-file" href="#" data-name="{{$value.Name}}" data-isdir="false">{{$value.Name}}</a>
                 {{end}}
               </td>
               <td class="name">{{$value.Size}} B</td>
@@ -343,7 +344,7 @@
       <section id="viewGrid" class="view" aria-label="Grid view">
         <div class="file-grid">
           {{range $key, $value := .Files}}
-          <div class="file-card" data-name="{{$value.Name}}" role="link" tabindex="0" aria-label="Open {{$value.Name}}">
+          <div class="file-card" data-name="{{$value.Name}}" data-isdir="{{if $value.IsDir}}true{{else}}false{{end}}" role="link" tabindex="0" aria-label="Open {{$value.Name}}">
             <div class="thumb">
               {{if not $value.IsDir}}
               {{$file := $value.Name}}
@@ -358,13 +359,18 @@
                 onerror="this.remove(); this.parentElement.innerHTML='<span class=&quot;thumb-fallback&quot;>no thumb</span>';"
               />
               {{else}}
-              <span class="thumb-fallback">dir</span>
+              <img
+                loading="lazy"
+                alt="{{$value.Name}}"
+                src="/dir.webp"
+                onerror="this.remove(); this.parentElement.innerHTML='<span class=&quot;thumb-fallback&quot;>no thumb</span>';"
+              />
               {{end}}
             </div>
 
             <div class="file-meta">
               <div class="file-name">
-                <a class="dir-link" href="#" data-name="{{$value.Name}}">{{$value.Name}}</a>
+                <a class="dir-link" href="#" data-name="{{$value.Name}}" data-isdir="{{if $value.IsDir}}true{{else}}false{{end}}">{{$value.Name}}</a>
               </div>
 
               <div>
@@ -377,6 +383,25 @@
           {{end}}
         </div>
       </section>
+
+      <!-- Media popup modal -->
+      <div id="mediaModal" class="media-modal" aria-hidden="true">
+        <div class="media-modal__backdrop" data-close="true"></div>
+        <div class="media-modal__dialog" role="dialog" aria-modal="true" aria-label="Media viewer">
+          <div class="media-modal__header">
+            <div id="mediaModalTitle" class="media-modal__title">Preview</div>
+            <div class="media-modal__actions">
+              <button id="mediaModalPrev" type="button" aria-label="Previous (Left arrow)">Prev</button>
+              <button id="mediaModalNext" type="button" aria-label="Next (Right arrow)">Next</button>
+              <a id="mediaModalDownload" href="#" download>Download</a>
+              <button id="mediaModalClose" type="button">Close</button>
+            </div>
+          </div>
+          <div id="mediaModalBody" class="media-modal__body">
+            <div class="media-modal__hint">Loading…</div>
+          </div>
+        </div>
+      </div>
 
       <script>
         (function () {
@@ -456,11 +481,213 @@
 
           applyMaskedNames();
 
+          // --- Media modal logic ---
+          const mediaModal = document.getElementById("mediaModal");
+          const mediaModalTitle = document.getElementById("mediaModalTitle");
+          const mediaModalBody = document.getElementById("mediaModalBody");
+          const mediaModalClose = document.getElementById("mediaModalClose");
+          const mediaModalDownload = document.getElementById("mediaModalDownload");
+          const mediaModalPrev = document.getElementById("mediaModalPrev");
+          const mediaModalNext = document.getElementById("mediaModalNext");
+
+          // Build an ordered list of files (not directories) from the current page
+          function getFileList() {
+            const seen = new Set();
+            const files = [];
+
+            // Prefer table order if present, else grid order
+            const tableLinks = document.querySelectorAll('#viewTable a.dir-link.is-file[data-name]');
+            const gridLinks = document.querySelectorAll('#viewGrid a.dir-link[data-isdir="false"][data-name]');
+
+            const nodes = tableLinks.length ? tableLinks : gridLinks;
+
+            nodes.forEach((n) => {
+              const name = n.getAttribute("data-name");
+              if (!name) return;
+              if (seen.has(name)) return;
+              seen.add(name);
+              files.push(name);
+            });
+
+            return files;
+          }
+
+          let fileList = getFileList();
+          let currentIndex = -1;
+
+          function getExt(name) {
+            const i = name.lastIndexOf(".");
+            if (i <= 0) return "";
+            return name.slice(i + 1).toLowerCase();
+          }
+
+          function isImageExt(ext) {
+            return ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].includes(ext);
+          }
+
+          function isVideoExt(ext) {
+            return ["mp4", "webm", "ogg", "mov", "m4v"].includes(ext);
+          }
+
+          function isAudioExt(ext) {
+            return ["mp3", "wav", "ogg", "m4a", "aac", "flac"].includes(ext);
+          }
+
+          function isPdfExt(ext) {
+            return ["pdf"].includes(ext);
+          }
+
+          function updateNavButtons() {
+            const open = mediaModal.classList.contains("is-open");
+            if (!open) {
+              mediaModalPrev.disabled = true;
+              mediaModalNext.disabled = true;
+              return;
+            }
+
+            mediaModalPrev.disabled = !(currentIndex > 0);
+            mediaModalNext.disabled = !(currentIndex >= 0 && currentIndex < fileList.length - 1);
+          }
+
+          function openModal(title, url, ext) {
+            mediaModalTitle.textContent = title || "Preview";
+            mediaModalDownload.href = url;
+
+            // Clear previous content
+            mediaModalBody.innerHTML = "";
+
+            if (isImageExt(ext)) {
+              const img = document.createElement("img");
+              img.alt = title || "image";
+              img.src = url;
+              img.loading = "eager";
+              mediaModalBody.appendChild(img);
+            } else if (isVideoExt(ext)) {
+              const video = document.createElement("video");
+              video.controls = true;
+              video.autoplay = true;
+              video.src = url;
+              mediaModalBody.appendChild(video);
+            } else if (isAudioExt(ext)) {
+              const audio = document.createElement("audio");
+              audio.controls = true;
+              audio.autoplay = true;
+              audio.src = url;
+              mediaModalBody.appendChild(audio);
+            } else if (isPdfExt(ext)) {
+              const iframe = document.createElement("iframe");
+              iframe.title = title || "pdf";
+              iframe.src = url;
+              mediaModalBody.appendChild(iframe);
+            } else {
+              const hint = document.createElement("div");
+              hint.className = "media-modal__hint";
+              hint.innerHTML =
+                "No preview available for this file type.<br/>Use <strong>Download</strong> to open it.";
+              mediaModalBody.appendChild(hint);
+            }
+
+            mediaModal.classList.add("is-open");
+            mediaModal.setAttribute("aria-hidden", "false");
+
+            // Prevent background scroll
+            document.documentElement.style.overflow = "hidden";
+            document.body.style.overflow = "hidden";
+
+            updateNavButtons();
+          }
+
+          function closeModal() {
+            if (!mediaModal.classList.contains("is-open")) return;
+
+            // Stop media playback by clearing body
+            mediaModalBody.innerHTML = '<div class="media-modal__hint">Closed.</div>';
+
+            mediaModal.classList.remove("is-open");
+            mediaModal.setAttribute("aria-hidden", "true");
+
+            document.documentElement.style.overflow = "";
+            document.body.style.overflow = "";
+
+            currentIndex = -1;
+            updateNavButtons();
+          }
+
           function navigateToName(name) {
             if (!name) return;
             const next = joinPath(window.location.pathname, name);
             window.location.assign(next);
           }
+
+          function openFileInModal(name) {
+            // Refresh list in case view changed or DOM changed
+            fileList = getFileList();
+
+            currentIndex = fileList.indexOf(name);
+
+            const ext = getExt(name);
+            const url = joinPath(window.location.pathname, name);
+            openModal(name, url, ext);
+          }
+
+          function openByIndex(nextIndex) {
+            if (nextIndex < 0 || nextIndex >= fileList.length) return;
+            const name = fileList[nextIndex];
+            if (!name) return;
+            openFileInModal(name);
+          }
+
+          function handleOpen(name, isDir) {
+            if (!name) return;
+            if (isDir) {
+              navigateToName(name);
+              return;
+            }
+
+            // For files: open in modal (media preview when possible)
+            openFileInModal(name);
+          }
+
+          mediaModalClose.addEventListener("click", closeModal);
+          mediaModalPrev.addEventListener("click", function () {
+            if (currentIndex <= 0) return;
+            openByIndex(currentIndex - 1);
+          });
+          mediaModalNext.addEventListener("click", function () {
+            if (currentIndex < 0) return;
+            openByIndex(currentIndex + 1);
+          });
+
+          mediaModal.addEventListener("click", function (e) {
+            const shouldClose = e.target && e.target.getAttribute && e.target.getAttribute("data-close") === "true";
+            if (shouldClose) closeModal();
+          });
+
+          document.addEventListener("keydown", function (e) {
+            const isOpen = mediaModal.classList.contains("is-open");
+
+            if (e.key === "Escape") {
+              if (isOpen) {
+                e.preventDefault();
+                closeModal();
+              }
+              return;
+            }
+
+            if (!isOpen) return;
+
+            if (e.key === "ArrowLeft") {
+              e.preventDefault();
+              if (currentIndex > 0) openByIndex(currentIndex - 1);
+              return;
+            }
+
+            if (e.key === "ArrowRight") {
+              e.preventDefault();
+              if (currentIndex >= 0 && currentIndex < fileList.length - 1) openByIndex(currentIndex + 1);
+              return;
+            }
+          });
 
           document.addEventListener("click", function (e) {
             // If user clicked a link, let the link handler handle it (and prevent double navigation)
@@ -468,31 +695,34 @@
             if (link) {
               e.preventDefault();
               const name = link.getAttribute("data-name");
-              navigateToName(name);
+              const isDir = link.getAttribute("data-isdir") === "true" || link.classList.contains("is-dir");
+              handleOpen(name, isDir);
               return;
             }
 
-            // Otherwise, if user clicked anywhere inside a file-card, navigate
+            // Otherwise, if user clicked anywhere inside a file-card, navigate/open
             const card = e.target.closest && e.target.closest(".file-card[data-name]");
             if (!card) return;
 
-            // Ignore clicks on elements that should not trigger navigation (if any in future)
             const name = card.getAttribute("data-name");
-            navigateToName(name);
+            const isDir = card.getAttribute("data-isdir") === "true";
+            handleOpen(name, isDir);
           });
 
           document.addEventListener("keydown", function (e) {
             // Keyboard accessibility: Enter/Space on focused card
-            const card = document.activeElement && document.activeElement.closest
-              ? document.activeElement.closest(".file-card[data-name]")
-              : null;
+            const card =
+              document.activeElement && document.activeElement.closest
+                ? document.activeElement.closest(".file-card[data-name]")
+                : null;
             if (!card) return;
 
             if (e.key !== "Enter" && e.key !== " ") return;
             e.preventDefault();
 
             const name = card.getAttribute("data-name");
-            navigateToName(name);
+            const isDir = card.getAttribute("data-isdir") === "true";
+            handleOpen(name, isDir);
           });
         })();
       </script>
