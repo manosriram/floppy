@@ -1,0 +1,15 @@
+.git
+.gitignore
+
+# Build outputs / generated dirs
+.thumb*
+.hls
+bin
+dist
+tmp
+
+# OS/editor noise
+.DS_Store
+
+# Go build cache (usually not in repo, but ignore anyway)
+**/*.test

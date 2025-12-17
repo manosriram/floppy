@@ -1,0 +1,25 @@
+services:
+  floppy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: floppy
+    ports:
+      - "5999:5050"
+    volumes:
+      # Config file (must be a file named "config" at repo root)
+      - ./config:/app/config:ro
+
+      # Media root mounted into the container.
+      # IMPORTANT: mountpoint paths inside your config file must refer to container paths (e.g. /data/movies).
+      # Change ./data to your actual host media directory.
+      - ./dockerdata:/data:ro
+
+      # Persist generated thumbnails and HLS segments across restarts
+      - floppy_thumbs:/app/.thumbs
+      - floppy_hls:/app/.hls
+    restart: unless-stopped
+
+volumes:
+  floppy_thumbs:
+  floppy_hls:
