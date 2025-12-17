@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM golang:1.23-alpine AS builder
+FROM golang:1.25.5-alpine AS builder
 
 WORKDIR /app
 
@@ -20,7 +20,7 @@ FROM alpine:3.20
 
 WORKDIR /app
 
-RUN apk add --no-cache ca-certificates
+RUN apk update && apk add --no-cache ca-certificates ffmpeg
 
 COPY --from=builder /out/floppy /app/floppy
 

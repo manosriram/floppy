@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/manosriram/floppy/internal/config"
-	"github.com/manosriram/floppy/internal/utils"
 )
 
 type HLS struct {
@@ -37,7 +36,7 @@ func (h *HLS) GenerateHLSSegmentsForMountPoint(mountPoint string) {
 			"-b:a", "128k",
 			"-map", "0", // Map all streams (or use 0:v:0, 0:a:0)
 			"-f", "hls",
-			"-hls_time", "10", // Length of each segment
+			"-hls_time", "6", // Length of each segment
 			"-hls_list_size", "0", // Keep all segments in the playlist
 			"-hls_segment_filename", fmt.Sprintf("%s/%s/output%%03d.ts", hlsDir, d.Name()),
 			fmt.Sprintf("%s/%s/%s.m3u8", hlsDir, d.Name(), d.Name()), // Output playlist path
@@ -51,18 +50,18 @@ func (h *HLS) GenerateHLSSegmentsForMountPoint(mountPoint string) {
 		extn := ext[len(ext)-1]
 		if extn == "mp4" || extn == "webm" || extn == "ogg" || extn == "mov" || extn == "m4v" {
 			hlsFilePath := fmt.Sprintf("%s/%s", hlsDir, d.Name())
-			pathExists, err := utils.PathExists(hlsFilePath)
-			if err != nil {
-				return err
-			}
+			// pathExists, err := utils.PathExists(hlsFilePath)
+			// if err != nil {
+			// return err
+			// }
 
-			if !pathExists {
-				err = os.Mkdir(hlsFilePath, 0o755)
-				if err != nil {
-					fmt.Println(err)
-					return err
-				}
+			// if !pathExists {
+			err = os.Mkdir(hlsFilePath, 0o755)
+			if err != nil {
+				fmt.Println(err)
+				// return err
 			}
+			// }
 
 			// TODO: fix hierarchy (.m3u8 inside .hls/name/)
 			out, err := exec.Command("ffmpeg", args...).CombinedOutput()

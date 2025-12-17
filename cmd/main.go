@@ -79,7 +79,7 @@ func main() {
 
 	// Serve static assets from web/ (e.g. /styles.css)
 	app.Static("/", "./static")
-	app.Static("/hls", "./.hls")
+	app.Static("/hls", workingDir+".hls")
 
 	// TODO: Make the API naming convention better
 	app.Get("/api/thumb", h.ApiThumbnailHandler.GetThumbnailHandler)
@@ -93,7 +93,7 @@ func main() {
 	go func() {
 		time.Sleep(1 * time.Second)
 		go generateThumbnails(m)
-		go generateHlsSegments(m)
+		// go generateHlsSegments(m)
 	}()
 
 	log.Fatal(app.Listen(":5050"))

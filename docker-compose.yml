@@ -13,11 +13,11 @@ services:
       # Media root mounted into the container.
       # IMPORTANT: mountpoint paths inside your config file must refer to container paths (e.g. /data/movies).
       # Change ./data to your actual host media directory.
-      - ./dockerdata:/data:ro
+      - /fs:/fs:ro
 
       # Persist generated thumbnails and HLS segments across restarts
-      - floppy_thumbs:/app/.thumbs
-      - floppy_hls:/app/.hls
+      - /fs/dev/floppy/.thumbs:/.thumbs
+      - /fs/dev/floppy/.hls:/.hls
     restart: unless-stopped
 
 volumes:
