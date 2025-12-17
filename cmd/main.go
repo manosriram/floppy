@@ -9,29 +9,35 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cache"
-	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/template/html/v2"
 	"github.com/manosriram/floppy/handlers"
 	"github.com/manosriram/floppy/internal/config"
 	"github.com/manosriram/floppy/internal/fs"
+	"go.uber.org/zap"
 )
 
 func generateThumbnails(m config.Mountpoints) {
 	for _, mp := range m.MountPoints {
 		go fs.GenerateThumbnails(mp)
 	}
-	fmt.Println("Completed thumbnail generation job")
+	zap.S().Infow("Completed thumbnail generation job")
 }
 
 func generateHlsSegments(m config.Mountpoints) {
 	h := fs.NewHLS(m)
 	h.GenerateHLSSegmentsForMountPoints()
 
-	fmt.Println("HLS generation completed")
+	zap.S().Infow("HLS generation completed")
 }
 
 func main() {
-	// TODO: Add uber zap logger
+	logger, err := zap.NewProduction()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer logger.Sync()
+
+	zap.ReplaceGlobals(logger)
 
 	workingDir, err := os.Getwd()
 	if err != nil {
@@ -59,7 +65,7 @@ func main() {
 	w := handlers.NewWebHandler(m)
 
 	// Middlewares
-	app.Use(logger.New())
+	// app.Use(logger.New())
 
 	app.Use(cache.New(cache.Config{
 		Next: func(c *fiber.Ctx) bool {
