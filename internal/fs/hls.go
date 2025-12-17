@@ -10,6 +10,7 @@ import (
 
 	"github.com/manosriram/floppy/internal/config"
 	"github.com/manosriram/floppy/internal/utils"
+	"go.uber.org/zap"
 )
 
 type HLS struct {
@@ -50,6 +51,7 @@ func (h *HLS) GenerateHLSSegmentsForMountPoint(mountPoint string) {
 		ext := strings.Split(path, ".")
 		extn := ext[len(ext)-1]
 		if extn == "mp4" || extn == "webm" || extn == "ogg" || extn == "mov" || extn == "m4v" {
+			zap.S().Infow("Generating HLS segments for media file", "filename", d.Name())
 			hlsFilePath := fmt.Sprintf("%s/%s", hlsDir, d.Name())
 			pathExists, err := utils.PathExists(hlsFilePath)
 			if err != nil {
@@ -59,35 +61,17 @@ func (h *HLS) GenerateHLSSegmentsForMountPoint(mountPoint string) {
 			if !pathExists {
 				err = os.Mkdir(hlsFilePath, 0o755)
 				if err != nil {
-					fmt.Println(err)
+					zap.S().Errorw("Error creating .hls dir", "err", err.Error())
 					return err
 				}
 			}
 
-			// TODO: fix hierarchy (.m3u8 inside .hls/name/)
-			out, err := exec.Command("ffmpeg", args...).CombinedOutput()
+			_, err = exec.Command("ffmpeg", args...).CombinedOutput()
 			if err != nil {
-				fmt.Println("ffmpeg error:", err)
-				fmt.Println("ffmpeg output:", string(out))
+				zap.S().Errorw("Error from ffmpeg shell call", "err", err.Error())
 				return err
 			}
-
-			// fmt.Println("out for " + path + string(out))
 		}
-
-		/*      // Check if thumbnail exists */
-		/* hash, err := utils.ThumbSHA256(path) */
-		/* if err != nil { */
-		/* return err */
-		/* } */
-
-		/* filePath := fmt.Sprintf("%s/%s_%s", hlsDir, hash, d.Name()) */
-		/* if _, err := os.Stat(filePath); errors.Is(err, os.ErrNotExist) { */
-		/* thumbnail := NewThumbnail(path, thumbsDir, extn, d.Name()) */
-		/* thumbnail.GenerateThumbnail() */
-		/* return nil */
-		/* } */
-		/* return nil */
 		return nil
 	})
 }

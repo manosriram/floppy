@@ -2,7 +2,6 @@ package web
 
 import (
 	"errors"
-	"fmt"
 	"net/url"
 	"os"
 	"strings"
@@ -10,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/manosriram/floppy/internal/config"
 	"github.com/manosriram/floppy/internal/fs"
+	"go.uber.org/zap"
 )
 
 type FiberWebHandler struct {
@@ -34,7 +34,7 @@ func (f *FiberWebHandler) Home(c *fiber.Ctx) error {
 func (f *FiberWebHandler) ReadMountDir(c *fiber.Ctx) error {
 	mountPath, err := url.PathUnescape(c.Params("*"))
 	if err != nil {
-		fmt.Println("Error reading dir: ", err.Error())
+		zap.S().Errorw("Error reading dir: ", "err", err.Error())
 		return c.Render("mount", fiber.Map{
 			"Error": err.Error(),
 		})
@@ -66,7 +66,7 @@ func (f *FiberWebHandler) ReadMountDir(c *fiber.Ctx) error {
 
 	files, err := fs.NewFS().ReadDir(mountPath)
 	if err != nil {
-		fmt.Println("Error reading dir: ", err.Error())
+		zap.S().Errorw("Error reading dir: ", "err", err.Error())
 		return c.Render("mount", fiber.Map{
 			"Files":        files,
 			"FileData":     nil,
