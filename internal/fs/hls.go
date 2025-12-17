@@ -23,7 +23,11 @@ func NewHLS(M config.Mountpoints) HLS {
 }
 
 func (h *HLS) GenerateHLSSegmentsForMountPoint(mountPoint string) {
-	hlsDir := "/Users/manosriram/go/src/floppy/.hls"
+	wd, err := os.Getwd()
+	if err != nil {
+	}
+
+	hlsDir := fmt.Sprintf("%s/.hls", wd)
 
 	_ = filepath.WalkDir(mountPoint, func(path string, d fs.DirEntry, err error) error {
 		args := []string{
