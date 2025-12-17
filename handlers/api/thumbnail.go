@@ -13,7 +13,7 @@ import (
 
 // TODO: Do not use hardcoded path
 const (
-	DEFAULT_THUMBS_IMG_PATH = ".thumbs/default_thumb.png"
+	DEFAULT_THUMBS_IMG_PATH = "static/default_thumb.png"
 )
 
 type FiberApiThumbnailHandler struct {
