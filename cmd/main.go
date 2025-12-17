@@ -17,7 +17,6 @@ import (
 )
 
 func generateThumbnails(m config.Mountpoints) {
-	fmt.Println("Started thumbnail generation job")
 	for _, mp := range m.MountPoints {
 		go fs.GenerateThumbnails(mp)
 	}
@@ -27,6 +26,8 @@ func generateThumbnails(m config.Mountpoints) {
 func generateHlsSegments(m config.Mountpoints) {
 	h := fs.NewHLS(m)
 	h.GenerateHLSSegmentsForMountPoints()
+
+	fmt.Println("HLS generation completed")
 }
 
 func main() {
@@ -54,12 +55,8 @@ func main() {
 		log.Fatalf("Error reading config file\n")
 	}
 
-	go generateHlsSegments(m)
-
 	h := handlers.NewApiHandler(m)
 	w := handlers.NewWebHandler(m)
-
-	go generateThumbnails(m)
 
 	// Middlewares
 	app.Use(logger.New())
@@ -92,6 +89,12 @@ func main() {
 	// Render template at root
 	app.Get("/", w.WebHandler.Home)
 	app.Get("/*", w.WebHandler.ReadMountDir)
+
+	go func() {
+		time.Sleep(1 * time.Second)
+		go generateThumbnails(m)
+		go generateHlsSegments(m)
+	}()
 
 	log.Fatal(app.Listen(":5050"))
 }
