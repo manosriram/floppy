@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -12,7 +13,7 @@ import (
 
 // TODO: Do not use hardcoded path
 const (
-	DEFAULT_THUMBS_IMG_PATH = "/Users/manosriram/go/src/floppy/.thumbs/default_thumb.png"
+	DEFAULT_THUMBS_IMG_PATH = ".thumbs/default_thumb.png"
 )
 
 type FiberApiThumbnailHandler struct {
@@ -54,5 +55,9 @@ func (h *FiberApiThumbnailHandler) GetThumbnailHandler(c *fiber.Ctx) error {
 		thumbnailFilePath := fmt.Sprintf("%s/%s_%s", c.Locals("thumbsDir").(string), name, onlyFileName[len(onlyFileName)-1])
 		return c.SendFile(thumbnailFilePath)
 	}
-	return c.SendFile(DEFAULT_THUMBS_IMG_PATH)
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	return c.SendFile(fmt.Sprintf("%s/%s", wd, DEFAULT_THUMBS_IMG_PATH))
 }

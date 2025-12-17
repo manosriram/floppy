@@ -43,7 +43,7 @@ func main() {
 		Views: engine,
 	})
 
-	m := config.NewMountPoints("/Users/manosriram/go/src/floppy/config")
+	m := config.NewMountPoints(fmt.Sprintf("%s/%s", workingDir, "config"))
 	err = m.ReadMountPointsFromConfig()
 	if err != nil {
 		log.Fatalf("Error reading config file\n")

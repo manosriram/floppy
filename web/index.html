@@ -54,49 +54,49 @@
         opacity: 0.85;
       }
 
-      /* Table view (mirrors mount.html styling) */
-      .file-table {
-        width: 100%;
-        border-collapse: collapse;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      /* Mountpoint buttons */
+      .mountpoints {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+        gap: 0.75rem;
+        margin-top: 0.5rem;
       }
 
-      .file-table th,
-      .file-table td {
-        padding: 0.35rem 0.6rem;
-        line-height: 1.15;
-        vertical-align: middle;
-      }
+      .mountpoint-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
 
-      .file-table thead th {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.18);
-      }
+        padding: 0.85rem 0.9rem;
+        border-radius: 12px;
 
-      .file-table tbody tr {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-      }
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.03);
 
-      .file-table th {
-        text-align: left;
+        text-decoration: none;
+        color: inherit;
+
         font-weight: 600;
-        opacity: 0.9;
+        letter-spacing: 0.01em;
+
+        user-select: none;
       }
 
-      .file-table td.name a {
+      .mountpoint-btn:hover {
+        border-color: rgba(255, 255, 255, 0.32);
+        background: rgba(255, 255, 255, 0.05);
         text-decoration: none;
       }
 
-      .file-table td.name a:hover {
-        text-decoration: underline;
+      .mountpoint-btn:active {
+        transform: translateY(1px);
       }
 
-      .badge {
-        display: inline-block;
-        padding: 0.1rem 0.45rem;
-        border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        opacity: 0.95;
-        font-size: 0.85rem;
+      .mountpoint-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 100%;
       }
     </style>
   </head>
@@ -104,32 +104,19 @@
     <main>
       <header class="page-header">
         <div class="title-row">
-          <h1>Mount points</h1>
+          <h1>Floppy</h1>
         </div>
       </header>
 
       {{if .MountPoints}}
       <section aria-label="Mount points">
-        <table class="file-table">
-          <thead>
-            <tr>
-              <th class="name">Name</th>
-              <th class="name">Path</th>
-            </tr>
-          </thead>
-          <tbody>
-            {{range $key, $value := .MountPoints}}
-            <tr>
-              <td class="name">
-                <a href="/{{$key}}">{{$key}}</a>
-              </td>
-              <td class="name">
-                <span class="badge">{{$value}}</span>
-              </td>
-            </tr>
-            {{end}}
-          </tbody>
-        </table>
+        <div class="mountpoints">
+          {{range $key, $value := .MountPoints}}
+            <a class="mountpoint-btn" href="/{{$key}}" aria-label="Open mountpoint {{$key}}">
+              <button class="mountpoint-name" style="width:50vw;">{{$key}}</button>
+            </a>
+          {{end}}
+        </div>
       </section>
       {{else}}
       <p class="empty"><em>No mount points configured.</em></p>
