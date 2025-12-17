@@ -5,3 +5,4 @@ floppy
 go.sum
 .thumbs
 .DS_STORE
+.hls

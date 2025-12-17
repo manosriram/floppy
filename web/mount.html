@@ -8,6 +8,8 @@
 
     <link rel="stylesheet" href="https://unpkg.com/terminal.css@0.7.4/dist/terminal.min.css" />
     <link rel="stylesheet" href="/styles.css" />
+		<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
 
     <style>
       :root {
@@ -372,12 +374,6 @@
               <div class="file-name">
                 <a class="dir-link" href="#" data-name="{{$value.Name}}" data-isdir="{{if $value.IsDir}}true{{else}}false{{end}}">{{$value.Name}}</a>
               </div>
-
-              <div>
-                {{if $value.IsDir}}
-                <span class="badge">DIR</span>
-                {{end}}
-              </div>
             </div>
           </div>
           {{end}}
@@ -550,6 +546,7 @@
           }
 
           function openModal(title, url, ext) {
+						console.log(title, url, ext)
             mediaModalTitle.textContent = title || "Preview";
             mediaModalDownload.href = url;
 
@@ -563,11 +560,34 @@
               img.loading = "eager";
               mediaModalBody.appendChild(img);
             } else if (isVideoExt(ext)) {
-              const video = document.createElement("video");
-              video.controls = true;
-              video.autoplay = true;
-              video.src = url;
-              mediaModalBody.appendChild(video);
+
+							const video = document.createElement("video");
+							video.controls = true;
+							video.autoplay = true;
+
+							const hlsUrl = "http://localhost:5050/hls/" + title + "/" + title + ".m3u8";
+							console.log(Hls.isSupported())
+
+							if (Hls.isSupported()) {
+								const hls = new Hls();
+								hls.loadSource(hlsUrl);
+								hls.attachMedia(video);
+
+								// Wait for the manifest to load before playing
+								hls.on(Hls.Events.MANIFEST_PARSED, () => {
+									console.log("Manifest loaded, starting playback");
+									video.play().catch(e => console.error("Autoplay prevented:", e));
+								});
+
+								hls.on(Hls.Events.ERROR, (event, data) => {
+									console.error("HLS Error:", data);
+								});
+
+							} else {
+								console.log("HLS not supported in this browser");
+							}
+
+							mediaModalBody.appendChild(video);
             } else if (isAudioExt(ext)) {
               const audio = document.createElement("audio");
               audio.controls = true;
@@ -725,6 +745,7 @@
             handleOpen(name, isDir);
           });
         })();
+
       </script>
 
       {{else}}

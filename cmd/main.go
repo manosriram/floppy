@@ -24,6 +24,11 @@ func generateThumbnails(m config.Mountpoints) {
 	fmt.Println("Completed thumbnail generation job")
 }
 
+func generateHlsSegments(m config.Mountpoints) {
+	h := fs.NewHLS(m)
+	h.GenerateHLSSegmentsForMountPoints()
+}
+
 func main() {
 	// TODO: Add uber zap logger
 
@@ -49,6 +54,8 @@ func main() {
 		log.Fatalf("Error reading config file\n")
 	}
 
+	go generateHlsSegments(m)
+
 	h := handlers.NewApiHandler(m)
 	w := handlers.NewWebHandler(m)
 
@@ -69,11 +76,13 @@ func main() {
 	app.Use(func(c *fiber.Ctx) error {
 		c.Locals("mountpoints", m.MountPoints)
 		c.Locals("thumbsDir", thumbsDir)
+		c.Response().Header.Add("Access-Control-Allow-Origin", "*")
 		return c.Next()
 	})
 
 	// Serve static assets from web/ (e.g. /styles.css)
 	app.Static("/", "./static")
+	app.Static("/hls", "./.hls")
 
 	// TODO: Make the API naming convention better
 	app.Get("/api/thumb", h.ApiThumbnailHandler.GetThumbnailHandler)
