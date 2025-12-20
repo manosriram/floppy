@@ -19,3 +19,16 @@ func PathExists(path string) (bool, error) {
 	}
 	return false, err // permission error, etc.
 }
+
+func GetFileNameFromPath(path string) string {
+	fileNameSplit := strings.Split(path, ".")
+	if len(fileNameSplit) != 2 {
+		return ""
+	}
+
+	return fileNameSplit[0]
+	// if len(fileNameSplit) >= 0 {
+	// }
+	// fileName := strings.Split(fileNameSplit[0], "/")
+	// return fileName[len(fileName)-1]
+}
