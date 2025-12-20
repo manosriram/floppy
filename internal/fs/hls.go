@@ -26,11 +26,14 @@ func NewHLS(M config.Mountpoints) HLS {
 	}
 }
 
-func generateNSegmentsViaFfmpeg(inputFilePath, outDir, seek string, duration float64, N int) ([]byte, error) {
+func generateNSegmentsViaFfmpeg(inputFilePath, outDir, seek string, N int) ([]byte, error) {
 	seekNum, _ := strconv.ParseInt(seek, 10, 64)
-	startNum := seekNum / 6
+	startNum := (6 * seekNum) / 6
 
 	ss := strconv.Itoa(int(startNum))
+	fmt.Println(seek, seekNum, startNum)
+	fmt.Println("zz ", ss)
+	fmt.Println("inDir = ", inputFilePath)
 	fmt.Println("outDir = ", outDir)
 
 	fmt.Println("generating to ", outDir)
@@ -38,19 +41,29 @@ func generateNSegmentsViaFfmpeg(inputFilePath, outDir, seek string, duration flo
 		"-hide_banner",
 		"-y",
 		"-ss", seek,
-		"-i", "/Users/manosriram/Desktop/ffmpegtest/chess.mp4",
+		"-i", "/Users/manosriram/Desktop/beatles.mp4",
 
 		"-t", strconv.Itoa(N * 6),
 
 		// segment muxer
 		"-c", "copy",
 		"-f", "segment",
+		"-vsync", "cfr", // Force constant frame rate
+		"-map", "0:v:0", // Explicitly map first video stream
+		"-map", "0:a:0", // Explicitly map first audio stream
+		"-g", "60", // Keyframe every 2 seconds (crucial for HLS)
+		"-r", "30", // Keyframe every 2 seconds (crucial for HLS)
+		"-hls_time", "6", // Match your 6.000 duration in manifest
+		"-hls_list_size", "0",
+		"-async", "1", // Sync audio start
+		"-ar", "44100", // Force audio sample rate to 44.1kHz (Standard)
+		"-hls_playlist_type", "vod",
 		"-segment_time", "6",
 		"-reset_timestamps", "1",
 		"-segment_start_number", ss,
-		filepath.Join(outDir, "output%03d.ts"),
-		// "/Users/manosriram/go/src/floppy/.hls/chess.mp4/output%03d.ts",
-		// filepath.Join(outDir, "output%03d.ts"),
+		fmt.Sprintf("%s/%s", outDir, "output%3d.ts"),
+		// outDir,
+		// "/Users/manosriram/go/src/floppy/.hls/beatles.mp4",
 	}
 	return exec.Command("ffmpeg", args...).CombinedOutput()
 }
@@ -84,7 +97,6 @@ func (h *HLS) CreateM3U8(c *fiber.Ctx) error {
 	wd, _ := os.Getwd()
 	hlsPath := filepath.Join(wd, ".hls", fileName)
 	// hlsPath := fmt.Sprintf("%s/.hls/%s", wd, fileName)
-	fmt.Println(hlsPath)
 
 	filePath := fmt.Sprintf("%s/%s", h.M.MountPoints[root], fileName)
 	ss := strings.Split(filePath, "/")
@@ -98,6 +110,11 @@ func (h *HLS) CreateM3U8(c *fiber.Ctx) error {
 	}
 
 	fmt.Println(filePath)
+	if !isVideoPath {
+		l := strings.Split(filePath, "/")
+		filePath = strings.Join(l[0:len(l)-1], "/")
+	}
+
 	getVideoDurationFromFfprobeArgs := []string{
 		"-v", "error",
 		"-show_entries", "format=duration",
@@ -123,24 +140,45 @@ func (h *HLS) CreateM3U8(c *fiber.Ctx) error {
 
 	segmentCount := int(duration) / segmentDuration
 
-	m3u8FileTemplate := `
-#EXTM3U
-#EXT-X-VERSION:7
-#EXT-X-TARGETDURATION:6
-#EXT-X-MEDIA-SEQUENCE:0
-#EXT-X-MAP:URI="%s"
+	fmt.Println(rootVsFile)
 
-	`
-
-	m3u8FileTemplate = fmt.Sprintf(m3u8FileTemplate, filePath)
-	for segment := range segmentCount {
-		m3u8FileTemplate += "#EXTINF:6.000,\n"
-		m3u8FileTemplate += fmt.Sprintf("%s:%s/output%d.ts\n", root, fileName, segment)
+	fileP := filepath.Join(wd, ".hls", fileName)
+	fmt.Println(fileP) // /Users/manosriram/go/src/floppy/.hls/beatles.mp4/output0.ts
+	z := strings.Split(fileP, "/")
+	if len(z) < 1 {
+		return nil
 	}
+	zz := strings.Join(z[:len(z)-1], "/")
+	exists, _ = utils.PathExists(hlsPath)
+	// if exists {
+	// b, _ := os.ReadFile(hlsPath)
+	// return c.Send(b)
+	// }
 
 	if isVideoPath {
-		go generateNSegmentsViaFfmpeg(actualFilePath, hlsPath, "0", duration, 3)
+		err = os.MkdirAll(hlsPath, 0o755)
+		if err != nil {
+			return err
+		}
+
+		m3u8FileTemplate := `
+#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-TARGETDURATION:%f
+#EXT-X-MEDIA-SEQUENCE:0
+	`
+		m3u8FileTemplate = fmt.Sprintf(m3u8FileTemplate, duration)
+		for segment := range segmentCount {
+			m3u8FileTemplate += fmt.Sprintf("http://localhost:5050/hls?f=%s:%s/output%03d.ts\n", root, fileName, segment)
+			m3u8FileTemplate += "#EXTINF:6.000,\n"
+		}
+		m3u8FileTemplate += "#EXT-X-ENDLIST"
+
+		generateNSegmentsViaFfmpeg(actualFilePath, hlsPath, "0", 3)
+		return c.SendString(m3u8FileTemplate)
 	}
+
+	outFile := strings.Split(rootVsFile[1], "/")[1]
 
 	// } else {
 	// nn := strings.Split(fileName, "/")
@@ -161,27 +199,24 @@ func (h *HLS) CreateM3U8(c *fiber.Ctx) error {
 	// "ffmpeg -ss 30 -i chess.mp4 -c copy -f mpegts pipe:1"
 	// TODO: figure out how to send segments
 	// How to find which .ts files to send since we are naming it as segment*.ts
-	if !isVideoPath {
-		outFile := strings.Split(rootVsFile[1], "/")[1]
-		fileP := filepath.Join(wd, ".hls", fileName)
-		exists, _ := utils.PathExists(fileP)
-		if exists {
-			b, _ := os.ReadFile(fileP)
-			return c.Send(b)
-		}
 
-		s, err := SegmentNumberFromTS(outFile)
-		if err != nil {
-			return err
-		}
-		// seek := getSeekSecondFromOutputNumber()
-		generateNSegmentsViaFfmpeg(actualFilePath, hlsPath, s, duration, 3)
-
-		c.Set("Content-Type", "video/MP2T")
-		// var out []byte
-		return c.SendString(outFile)
+	s, err := SegmentNumberFromTS(outFile)
+	if err != nil {
+		return err
 	}
-	return c.SendString(m3u8FileTemplate)
+	fmt.Println("s = ", s)
+	// seek := getSeekSecondFromOutputNumber()
+	_, err = generateNSegmentsViaFfmpeg(actualFilePath, zz, s, 3)
+	if err != nil {
+		return err
+	}
+
+	c.Set("Content-Type", "video/MP2T")
+	// var out []byte
+
+	data, _ := os.ReadFile(hlsPath)
+
+	return c.Send(data)
 }
 
 func (h *HLS) GenerateHLSSegmentsForMountPoint(mountPoint string) {

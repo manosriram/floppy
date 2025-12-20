@@ -565,11 +565,16 @@
 							video.controls = true;
 							video.autoplay = true;
 
-							const hlsUrl = "http://" + window.location.host + "/hls/" + title + "/" + title + ".m3u8";
+							//const hlsUrl = "http://" + window.location.host + "/hls/" + title + "/" + title + ".m3u8";
+							const hlsUrl = "http://" + window.location.host + "/hls?f=" + "{{$.RootName}}:" + title;
 							console.log(Hls.isSupported())
 
 							if (Hls.isSupported()) {
-								const hls = new Hls();
+								const hls = new Hls({
+									maxBufferLength: 30,     // Only buffer 30 seconds ahead
+									maxMaxBufferLength: 60,
+									startLevel: 0            // Start at the lowest quality/first segment
+								});
 								hls.loadSource(hlsUrl);
 								hls.attachMedia(video);
 
