@@ -36,14 +36,16 @@ func generateNSegmentsViaFfmpeg(inputFilePath, outDir, seek string, N int) ([]by
 	fmt.Println("inDir = ", inputFilePath)
 	fmt.Println("outDir = ", outDir)
 
+	seeeek := strconv.Itoa(int(seekNum) * N)
+
 	fmt.Println("generating to ", outDir)
 	args := []string{
 		"-hide_banner",
 		"-y",
-		"-ss", seek,
+		"-ss", seeeek,
 		"-i", "/Users/manosriram/Desktop/beatles.mp4",
 
-		"-t", strconv.Itoa(N * 6),
+		"-t", "6",
 
 		// segment muxer
 		"-c", "copy",
@@ -93,6 +95,7 @@ func (h *HLS) CreateM3U8(c *fiber.Ctx) error {
 	for _, videoSuffix := range videoSuffixes {
 		isVideoPath = isVideoPath || strings.HasSuffix(fileName, videoSuffix)
 	}
+	fmt.Println("isvid = ", isVideoPath)
 
 	wd, _ := os.Getwd()
 	hlsPath := filepath.Join(wd, ".hls", fileName)
@@ -148,12 +151,25 @@ func (h *HLS) CreateM3U8(c *fiber.Ctx) error {
 	if len(z) < 1 {
 		return nil
 	}
-	zz := strings.Join(z[:len(z)-1], "/")
+	// zz := strings.Join(z[:len(z)-1], "/")
 	exists, _ = utils.PathExists(hlsPath)
-	// if exists {
-	// b, _ := os.ReadFile(hlsPath)
-	// return c.Send(b)
-	// }
+	if exists && !isVideoPath {
+		fmt.Println("hlll = ", hlsPath)
+		b, _ := os.ReadFile(hlsPath)
+		return c.Send(b)
+	}
+
+	var outFile string
+	var s string = "0"
+	if !isVideoPath {
+		outFile = strings.Split(rootVsFile[1], "/")[1]
+		s, err = SegmentNumberFromTS(outFile)
+		if err != nil {
+			return err
+		}
+	} else {
+		outFile = ""
+	}
 
 	if isVideoPath {
 		err = os.MkdirAll(hlsPath, 0o755)
@@ -164,21 +180,28 @@ func (h *HLS) CreateM3U8(c *fiber.Ctx) error {
 		m3u8FileTemplate := `
 #EXTM3U
 #EXT-X-VERSION:3
-#EXT-X-TARGETDURATION:%f
+#EXT-X-TARGETDURATION:7
 #EXT-X-MEDIA-SEQUENCE:0
-	`
-		m3u8FileTemplate = fmt.Sprintf(m3u8FileTemplate, duration)
+`
+		// m3u8FileTemplate = fmt.Sprintf(m3u8FileTemplate)
 		for segment := range segmentCount {
-			m3u8FileTemplate += fmt.Sprintf("http://localhost:5050/hls?f=%s:%s/output%03d.ts\n", root, fileName, segment)
+			// for segment := range segmentCount + 1 {
 			m3u8FileTemplate += "#EXTINF:6.000,\n"
+			m3u8FileTemplate += fmt.Sprintf("http://localhost:5050/hls?f=%s:%s/output%03d.ts\n", root, fileName, segment)
 		}
 		m3u8FileTemplate += "#EXT-X-ENDLIST"
 
-		generateNSegmentsViaFfmpeg(actualFilePath, hlsPath, "0", 3)
+		for i := range 10 {
+			si, _ := strconv.Atoi(s) // "005" -> 5
+			si += 1
+			s = strconv.Itoa(si)
+
+			generateNSegmentsViaFfmpeg(actualFilePath, hlsPath, s, i)
+		}
 		return c.SendString(m3u8FileTemplate)
 	}
 
-	outFile := strings.Split(rootVsFile[1], "/")[1]
+	fmt.Println("not vid")
 
 	// } else {
 	// nn := strings.Split(fileName, "/")
@@ -200,19 +223,16 @@ func (h *HLS) CreateM3U8(c *fiber.Ctx) error {
 	// TODO: figure out how to send segments
 	// How to find which .ts files to send since we are naming it as segment*.ts
 
-	s, err := SegmentNumberFromTS(outFile)
-	if err != nil {
-		return err
-	}
-	fmt.Println("s = ", s)
-	// seek := getSeekSecondFromOutputNumber()
-	_, err = generateNSegmentsViaFfmpeg(actualFilePath, zz, s, 3)
-	if err != nil {
-		return err
-	}
+	// si, _ := strconv.Atoi(s) // "005" -> 5
 
-	c.Set("Content-Type", "video/MP2T")
-	// var out []byte
+	// startTime := si * 6
+	// startTimeStr := strconv.Itoa(startTime)
+	// fmt.Println("s ss = ", startTimeStr)
+
+	// _, err = generateNSegmentsViaFfmpeg(actualFilePath, zz, s, 5)
+	// if err != nil {
+	// return err
+	// }
 
 	data, _ := os.ReadFile(hlsPath)
 
