@@ -26,47 +26,44 @@ func NewHLS(M config.Mountpoints) HLS {
 	}
 }
 
+// generateNSegmentsViaFfmpeg generates a single 6-second MPEG-TS segment starting at `seek` seconds.
+// The output file is written to outDir as output%03d.ts where the number is derived from seek/6.
 func generateNSegmentsViaFfmpeg(inputFilePath, outDir, seek string, N int) ([]byte, error) {
-	seekNum, _ := strconv.ParseInt(seek, 10, 64)
-	startNum := (6 * seekNum) / 6
+	_ = N // N is currently unused; kept to avoid changing other call sites.
 
-	ss := strconv.Itoa(int(startNum))
-	fmt.Println(seek, seekNum, startNum)
-	fmt.Println("zz ", ss)
-	fmt.Println("inDir = ", inputFilePath)
-	fmt.Println("outDir = ", outDir)
+	seekNum, err := strconv.ParseInt(seek, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid seek value %q: %w", seek, err)
+	}
+	if seekNum < 0 {
+		return nil, fmt.Errorf("seek must be >= 0, got %d", seekNum)
+	}
 
-	seeeek := strconv.Itoa(int(seekNum) * N)
+	// Segment index based on 6-second segments.
+	segIndex := int(seekNum / 6)
+	outPattern := filepath.Join(outDir, "output%03d.ts")
 
-	fmt.Println("generating to ", outDir)
 	args := []string{
 		"-hide_banner",
 		"-y",
-		"-ss", seeeek,
-		"-i", "/Users/manosriram/Desktop/beatles.mp4",
 
+		// Seek to requested start time (seconds)
+		"-ss", strconv.FormatInt(seekNum, 10),
+		"-i", inputFilePath,
+
+		// Generate exactly 6 seconds
 		"-t", "6",
 
-		// segment muxer
+		// Write a single .ts segment file
 		"-c", "copy",
 		"-f", "segment",
-		"-vsync", "cfr", // Force constant frame rate
-		"-map", "0:v:0", // Explicitly map first video stream
-		"-map", "0:a:0", // Explicitly map first audio stream
-		"-g", "60", // Keyframe every 2 seconds (crucial for HLS)
-		"-r", "30", // Keyframe every 2 seconds (crucial for HLS)
-		"-hls_time", "6", // Match your 6.000 duration in manifest
-		"-hls_list_size", "0",
-		"-async", "1", // Sync audio start
-		"-ar", "44100", // Force audio sample rate to 44.1kHz (Standard)
-		"-hls_playlist_type", "vod",
 		"-segment_time", "6",
+		"-segment_start_number", strconv.Itoa(segIndex),
 		"-reset_timestamps", "1",
-		"-segment_start_number", ss,
-		fmt.Sprintf("%s/%s", outDir, "output%3d.ts"),
-		// outDir,
-		// "/Users/manosriram/go/src/floppy/.hls/beatles.mp4",
+		"-segment_list", "pipe:1", // avoid creating a .m3u8 on disk; output list to stdout
+		outPattern,
 	}
+
 	return exec.Command("ffmpeg", args...).CombinedOutput()
 }
 
