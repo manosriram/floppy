@@ -28,8 +28,6 @@ func (h *HLS) GenerateHLSSegmentsForMountPoint(mountPoint string) {
 	}
 
 	hlsDir := fmt.Sprintf("%s/%s", wd, ".hls")
-	// hlsDir := "/Users/manosriram/go/src/floppy/.hls"
-
 	_ = filepath.WalkDir(mountPoint, func(path string, d fs.DirEntry, err error) error {
 
 		args := []string{
@@ -53,21 +51,11 @@ func (h *HLS) GenerateHLSSegmentsForMountPoint(mountPoint string) {
 		extn := ext[len(ext)-1]
 		if extn == "mp4" || extn == "webm" || extn == "ogg" || extn == "mov" || extn == "m4v" {
 			zap.S().Infow("Generating HLS segments for media file", "filename", d.Name())
-			hlsFilePath := fmt.Sprintf("%s/%s/%s.m3u8", hlsDir, d.Name(), d.Name())
-			fmt.Println(hlsFilePath)
-			// pathExists, err := utils.PathExists(hlsFilePath)
-			// if err != nil {
-			// return err
-			// }
 
 			hlsDir := fmt.Sprintf("%s/%s", hlsDir, d.Name())
 			err = os.Mkdir(hlsDir, 0o755)
-			if !os.IsExist(err) {
-				// if err != nil {
-				// zap.S().Errorw("Error creating .hls dir", "err", err.Error())
-				// return err
-				// }
-
+			fmt.Println(err)
+			if err == nil || os.IsExist(err) {
 				_, err = exec.Command("ffmpeg", args...).CombinedOutput()
 				if err != nil {
 					zap.S().Errorw("Error from ffmpeg shell call", "err", err.Error())
