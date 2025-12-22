@@ -570,11 +570,7 @@
 							console.log(Hls.isSupported())
 
 							if (Hls.isSupported()) {
-								const hls = new Hls({
-									maxBufferLength: 30,     // Only buffer 30 seconds ahead
-									maxMaxBufferLength: 60,
-									startLevel: 0            // Start at the lowest quality/first segment
-								});
+								const hls = new Hls({});
 								hls.loadSource(hlsUrl);
 								hls.attachMedia(video);
 
