@@ -1,0 +1,11 @@
+
+
+1. Browser requests .m3u8 file at /hls?f=chess.mp4
+		-> Store .m3u8 string
+		-> Start first 3 segments of the file and store it
+		-> Return .m3u8 string
+
+2. Browser requests .ts files at /hls?f=chess.mp4/output0.ts
+		-> Check if output0.ts exists at .hls/chess.mp4/output0.ts
+		-> If file exists, generate next 3 segments and return the output0.ts byte array
+		-> If file doesn't exist, generate next 3 segments including the current segment
