@@ -93,7 +93,6 @@ func main() {
 
 	h := handlers.NewApiHandler(m)
 	w := handlers.NewWebHandler(m)
-	hls := fs.NewHLS(m)
 
 	// Middlewares
 	// app.Use(logger.New())
@@ -117,10 +116,9 @@ func main() {
 
 	// Serve static assets from web/ (e.g. /styles.css)
 	app.Static("/", "./static")
-	// app.Static("/hls", "./.hls")
+	app.Static("/hls", "./.hls")
 
 	// TODO: Make the API naming convention better
-	app.Get("/hls", hls.CreateM3U8)
 	app.Get("/api/thumb", h.ApiThumbnailHandler.GetThumbnailHandler)
 	app.Post("/api/v1/fs/list", h.ApiFileHandler.ReadDirHandler)
 	app.Post("/api/v1/mountpoints/list", h.ApiMountpointHandler.ListMountPointsHandler)
@@ -129,11 +127,11 @@ func main() {
 	app.Get("/", w.WebHandler.Home)
 	app.Get("/*", w.WebHandler.ReadMountDir)
 
-	// go func() {
-	// time.Sleep(1 * time.Second)
-	// go generateThumbnails(m)
-	// go generateHlsSegments(m)
-	// }()
+	go func() {
+		time.Sleep(1 * time.Second)
+		// go generateThumbnails(m)
+		go generateHlsSegments(m)
+	}()
 
 	log.Fatal(app.Listen(":5050"))
 }

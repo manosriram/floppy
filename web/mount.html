@@ -565,8 +565,7 @@
 							video.controls = true;
 							video.autoplay = true;
 
-							const hlsUrl = "http://" + window.location.host + "/hls?f=" + "{{$.RootName}}:" + title;
-							console.log(Hls.isSupported())
+							const hlsUrl = "http://" + window.location.host + "/hls/" + title + "/" + title + ".m3u8";
 
               function fallbackToDirectPlayback(reason) {
                 try {
