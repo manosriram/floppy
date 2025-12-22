@@ -565,12 +565,35 @@
 							video.controls = true;
 							video.autoplay = true;
 
-							//const hlsUrl = "http://" + window.location.host + "/hls/" + title + "/" + title + ".m3u8";
 							const hlsUrl = "http://" + window.location.host + "/hls?f=" + "{{$.RootName}}:" + title;
 							console.log(Hls.isSupported())
 
+              function fallbackToDirectPlayback(reason) {
+                try {
+                  console.warn("Falling back to direct video playback:", reason);
+                } catch (e) {}
+
+                // If hls.js was attached, detach it
+                if (video._hlsInstance) {
+                  try {
+                    video._hlsInstance.destroy();
+                  } catch (e) {}
+                  video._hlsInstance = null;
+                }
+
+                // Direct file playback (works if the browser can play the container/codec)
+                video.src = url;
+
+                // Try to play; if autoplay is blocked, user can press play
+                video.play().catch((e) => {
+                  console.error("Direct playback failed or autoplay prevented:", e);
+                });
+              }
+
 							if (Hls.isSupported()) {
 								const hls = new Hls({});
+                video._hlsInstance = hls;
+
 								hls.loadSource(hlsUrl);
 								hls.attachMedia(video);
 
@@ -582,10 +605,16 @@
 
 								hls.on(Hls.Events.ERROR, (event, data) => {
 									console.error("HLS Error:", data);
+
+                  // If it's fatal, fallback to direct playback
+                  if (data && data.fatal) {
+                    fallbackToDirectPlayback(data.type || "fatal hls error");
+                  }
 								});
 
 							} else {
 								console.log("HLS not supported in this browser");
+                fallbackToDirectPlayback("hls.js not supported");
 							}
 
 							mediaModalBody.appendChild(video);
