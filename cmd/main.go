@@ -16,6 +16,39 @@ import (
 	"go.uber.org/zap"
 )
 
+func RequestLoggerSugar(log *zap.SugaredLogger) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		start := time.Now()
+
+		err := c.Next()
+
+		latency := time.Since(start)
+		status := c.Response().StatusCode()
+
+		// Basic request log
+		log.Infow("request",
+			"method", c.Method(),
+			"path", c.Path(),
+			"status", status,
+			"latency", latency.String(),
+			"ip", c.IP(),
+		)
+
+		// If handler returned an error, log it too (and let Fiber handle it)
+		if err != nil {
+			log.Warnw("request error",
+				"method", c.Method(),
+				"path", c.Path(),
+				"status", status,
+				"err", err.Error(),
+			)
+			return err
+		}
+
+		return nil
+	}
+}
+
 func generateThumbnails(m config.Mountpoints) {
 	for _, mp := range m.MountPoints {
 		go fs.GenerateThumbnails(mp)
@@ -31,10 +64,7 @@ func generateHlsSegments(m config.Mountpoints) {
 }
 
 func main() {
-	logger, err := zap.NewProduction()
-	if err != nil {
-		log.Fatal(err)
-	}
+	logger := zap.Must(zap.NewProduction())
 	defer logger.Sync()
 
 	zap.ReplaceGlobals(logger)
@@ -66,6 +96,7 @@ func main() {
 
 	// Middlewares
 	// app.Use(logger.New())
+	app.Use(RequestLoggerSugar(zap.S()))
 
 	app.Use(cache.New(cache.Config{
 		Next: func(c *fiber.Ctx) bool {
@@ -85,7 +116,7 @@ func main() {
 
 	// Serve static assets from web/ (e.g. /styles.css)
 	app.Static("/", "./static")
-	app.Static("/hls", workingDir+".hls")
+	app.Static("/hls", "./.hls")
 
 	// TODO: Make the API naming convention better
 	app.Get("/api/thumb", h.ApiThumbnailHandler.GetThumbnailHandler)
@@ -99,8 +130,8 @@ func main() {
 
 	go func() {
 		time.Sleep(1 * time.Second)
-		go generateThumbnails(m)
-		// go generateHlsSegments(m)
+		// go generateThumbnails(m)
+		go generateHlsSegments(m)
 	}()
 
 	log.Fatal(app.Listen(":5050"))
