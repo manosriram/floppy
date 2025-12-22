@@ -1,6 +1,9 @@
 package api
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/manosriram/floppy/internal/config"
 	"github.com/manosriram/floppy/internal/fs"
@@ -38,4 +41,22 @@ func (h *FiberApiFileHandler) ReadDirHandler(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"files": files,
 	})
+}
+
+func (h *FiberApiFileHandler) UploadDirHandler(c *fiber.Ctx) error {
+	// Get first file from form field "document":
+	file, err := c.FormFile("file")
+	path := c.FormValue("path")
+
+	path = strings.Trim(path, " ")
+	splitPath := strings.Split(path, "/")
+
+	root := splitPath[1]
+	actualRoot := h.M.MountPoints[root]
+	actualPath := fmt.Sprintf("%s/%s", actualRoot, strings.Join(splitPath[2:], "/"))
+
+	if err != nil {
+		return err
+	}
+	return c.SaveFile(file, actualPath)
 }

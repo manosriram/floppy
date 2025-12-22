@@ -90,6 +90,7 @@ func main() {
 	// TODO: Make the API naming convention better
 	app.Get("/api/thumb", h.ApiThumbnailHandler.GetThumbnailHandler)
 	app.Post("/api/v1/fs/list", h.ApiFileHandler.ReadDirHandler)
+	app.Post("/api/v1/fs/upload", h.ApiFileHandler.UploadDirHandler)
 	app.Post("/api/v1/mountpoints/list", h.ApiMountpointHandler.ListMountPointsHandler)
 
 	// Render template at root

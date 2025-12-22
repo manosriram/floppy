@@ -477,6 +477,66 @@
 
           applyMaskedNames();
 
+<<<<<<< Updated upstream
+=======
+          // Upload button wiring
+          const btnUpload = document.getElementById("btnUpload");
+          const fileUploadInput = document.getElementById("fileUploadInput");
+
+          function getCurrentDirPathForUpload(fileName) {
+            // window.location.pathname is the current directory route in the UI.
+            // We want to upload into this directory, so we append the filename.
+            // Ensure we don't double-slash.
+						console.log("{{$.RootName}}")
+            let base = window.location.pathname || "/";
+            if (!base.endsWith("/")) base += "/";
+            return decodeURIComponent(base) + fileName;
+          }
+
+          if (btnUpload && fileUploadInput) {
+            btnUpload.addEventListener("click", function () {
+              fileUploadInput.value = "";
+              fileUploadInput.click();
+            });
+
+            fileUploadInput.addEventListener("change", async function () {
+              const file = fileUploadInput.files && fileUploadInput.files[0];
+              if (!file) return;
+
+              const form = new FormData();
+              form.append("file", file);
+
+              const uploadPath = getCurrentDirPathForUpload(file.name);
+              form.append("path", uploadPath);
+
+              btnUpload.disabled = true;
+              btnUpload.textContent = "Uploading...";
+
+              try {
+                const res = await fetch("/api/v1/fs/upload", {
+                  method: "POST",
+                  body: form,
+                });
+
+                if (!res.ok) {
+                  const text = await res.text().catch(() => "");
+                  throw new Error("Upload failed (" + res.status + "): " + text);
+                }
+
+                // Refresh to show the new file
+                window.location.reload();
+              } catch (err) {
+                console.error(err);
+                alert(err && err.message ? err.message : "Upload failed");
+              } finally {
+                btnUpload.disabled = false;
+                btnUpload.textContent = "Upload";
+                fileUploadInput.value = "";
+              }
+            });
+          }
+
+>>>>>>> Stashed changes
           // --- Media modal logic ---
           const mediaModal = document.getElementById("mediaModal");
           const mediaModalTitle = document.getElementById("mediaModalTitle");
