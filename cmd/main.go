@@ -130,8 +130,8 @@ func main() {
 
 	go func() {
 		time.Sleep(1 * time.Second)
-		// go generateThumbnails(m)
-		go generateHlsSegments(m)
+		go generateThumbnails(m)
+		// go generateHlsSegments(m)
 	}()
 
 	log.Fatal(app.Listen(":5050"))
